@@ -20,12 +20,12 @@ Nguyên tắc:
 
 Keyword được chia thành các nhóm:
 
-| Nhóm | Mục đích |
-|---|---|
-| Navigation | Điều hướng trình duyệt/trang |
-| Input | Nhập hoặc xóa dữ liệu trên element |
-| Action | Thao tác với element |
-| Verification | Kiểm tra kết quả mong đợi |
+| Nhóm             | Mục đích                                                           |
+| ---------------- | ------------------------------------------------------------------ |
+| Navigation       | Điều hướng trình duyệt/trang                                       |
+| Input            | Nhập hoặc xóa dữ liệu trên element                                 |
+| Action           | Thao tác với element                                               |
+| Verification     | Kiểm tra kết quả mong đợi                                          |
 | System/Lifecycle | Quản lý tài nguyên framework, không ghi như test step thông thường |
 
 ---
@@ -34,7 +34,6 @@ Keyword được chia thành các nhóm:
 
 Tên keyword:
 
-- Viết `UPPER_SNAKE_CASE`.
 - Có ý nghĩa nghiệp vụ rõ ràng.
 - Không chứa locator.
 - Không phụ thuộc tên website cụ thể.
@@ -42,13 +41,10 @@ Tên keyword:
 Ví dụ:
 
 ```text
-NAVIGATE
-CLICK
-ENTER_TEXT
-CLEAR_TEXT
-VERIFY_TEXT
-VERIFY_URL
-VERIFY_ELEMENT_VISIBLE
+NavigateURL
+InputText
+Click
+VerifyURL
 ```
 
 Không dùng:
@@ -67,11 +63,11 @@ vì keyword không nên gắn với một locator cụ thể.
 
 ### 4.1 Navigation
 
-| Keyword | Target | Data | Expected | Mô tả |
-|---|---|---|---|---|
-| `NAVIGATE` | Không | URL | Không | Mở URL cần kiểm thử |
-| `BACK` | Không | Không | Không | Quay lại trang trước |
-| `REFRESH` | Không | Không | Không | Tải lại trang hiện tại |
+| Keyword    | Target | Data  | Expected | Mô tả                  |
+| ---------- | ------ | ----- | -------- | ---------------------- |
+| `NAVIGATE` | Không  | URL   | Không    | Mở URL cần kiểm thử    |
+| `BACK`     | Không  | Không | Không    | Quay lại trang trước   |
+| `REFRESH`  | Không  | Không | Không    | Tải lại trang hiện tại |
 
 Ví dụ:
 
@@ -86,10 +82,10 @@ Expected =
 
 ### 4.2 Input
 
-| Keyword | Target | Data | Expected | Mô tả |
-|---|---|---|---|---|
-| `ENTER_TEXT` | Có | Text | Không | Nhập dữ liệu vào element |
-| `CLEAR_TEXT` | Có | Không | Không | Xóa nội dung của element |
+| Keyword      | Target | Data  | Expected | Mô tả                    |
+| ------------ | ------ | ----- | -------- | ------------------------ |
+| `ENTER_TEXT` | Có     | Text  | Không    | Nhập dữ liệu vào element |
+| `CLEAR_TEXT` | Có     | Không | Không    | Xóa nội dung của element |
 
 Ví dụ:
 
@@ -106,9 +102,9 @@ Expected =
 
 ### 4.3 Action
 
-| Keyword | Target | Data | Expected | Mô tả |
-|---|---|---|---|---|
-| `CLICK` | Có | Không | Không | Click element |
+| Keyword | Target | Data  | Expected | Mô tả         |
+| ------- | ------ | ----- | -------- | ------------- |
+| `CLICK` | Có     | Không | Không    | Click element |
 
 Ví dụ:
 
@@ -123,12 +119,12 @@ Expected =
 
 ### 4.4 Verification
 
-| Keyword | Target | Data | Expected | Mô tả |
-|---|---|---|---|---|
-| `VERIFY_TEXT` | Có | Không | Text | Kiểm tra text của element |
-| `VERIFY_URL` | Không | Không | URL/Text | Kiểm tra URL hiện tại |
-| `VERIFY_ELEMENT_VISIBLE` | Có | Không | Không | Kiểm tra element hiển thị |
-| `VERIFY_ERROR` | Có | Không | Error message | Kiểm tra thông báo lỗi |
+| Keyword                  | Target | Data  | Expected      | Mô tả                     |
+| ------------------------ | ------ | ----- | ------------- | ------------------------- |
+| `VERIFY_TEXT`            | Có     | Không | Text          | Kiểm tra text của element |
+| `VERIFY_URL`             | Không  | Không | URL/Text      | Kiểm tra URL hiện tại     |
+| `VERIFY_ELEMENT_VISIBLE` | Có     | Không | Không         | Kiểm tra element hiển thị |
+| `VERIFY_ERROR`           | Có     | Không | Error message | Kiểm tra thông báo lỗi    |
 
 Ví dụ:
 
@@ -192,13 +188,13 @@ execute(keyword, target, data, expected, context)
 
 Trong đó:
 
-| Parameter | Ý nghĩa |
-|---|---|
-| `keyword` | Tên keyword |
-| `target` | Đối tượng UI cần thao tác, nếu có |
-| `data` | Dữ liệu đầu vào, nếu có |
+| Parameter  | Ý nghĩa                                   |
+| ---------- | ----------------------------------------- |
+| `keyword`  | Tên keyword                               |
+| `target`   | Đối tượng UI cần thao tác, nếu có         |
+| `data`     | Dữ liệu đầu vào, nếu có                   |
 | `expected` | Giá trị mong đợi cho verification, nếu có |
-| `context` | Trạng thái hiện tại của test |
+| `context`  | Trạng thái hiện tại của test              |
 
 Ví dụ:
 

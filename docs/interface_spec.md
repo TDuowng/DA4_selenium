@@ -113,11 +113,9 @@ Format chính thức:
 Ví dụ:
 
 ```text
-LoginPage.username_field
-LoginPage.password_field
-LoginPage.login_button
-HomePage.search_box
-ProductPage.add_to_cart_button
+register.username
+register.email
+register.password
 ```
 
 Target không chứa XPath/CSS/ID trực tiếp.
@@ -133,7 +131,8 @@ button[type='submit']
 Đúng:
 
 ```text
-LoginPage.username_field
+register.username
+
 ```
 
 ---
@@ -143,13 +142,14 @@ LoginPage.username_field
 Khi framework nhận:
 
 ```text
-Target = LoginPage.username_field
+Target = register.username
+
 ```
 
 nó thực hiện:
 
 ```text
-LoginPage.username_field
+register.username
         ↓
 Page Object = LoginPage
         ↓
@@ -174,7 +174,7 @@ Ví dụ:
 
 ```text
 ENTER_TEXT
-Target = LoginPage.username_field
+Target = register.username
 Data = admin
 ```
 
