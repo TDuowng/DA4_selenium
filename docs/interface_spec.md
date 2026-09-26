@@ -32,13 +32,13 @@ TestCaseID | Step | Keyword | Target | Data | Expected
 
 Ví dụ:
 
-| TestCaseID | Step | Keyword | Target | Data | Expected |
-|---|---:|---|---|---|---|
-| TC_LOGIN_01 | 1 | NAVIGATE | | https://example.com/login | |
-| TC_LOGIN_01 | 2 | ENTER_TEXT | LoginPage.username_field | admin | |
-| TC_LOGIN_01 | 3 | ENTER_TEXT | LoginPage.password_field | 123456 | |
-| TC_LOGIN_01 | 4 | CLICK | LoginPage.login_button | | |
-| TC_LOGIN_01 | 5 | VERIFY_TEXT | LoginPage.message | | Login successful |
+| TestCaseID  | Step | Keyword     | Target                   | Data                      | Expected         |
+| ----------- | ---: | ----------- | ------------------------ | ------------------------- | ---------------- |
+| TC_LOGIN_01 |    1 | NAVIGATE    |                          | https://example.com/login |                  |
+| TC_LOGIN_01 |    2 | ENTER_TEXT  | LoginPage.username_field | admin                     |                  |
+| TC_LOGIN_01 |    3 | ENTER_TEXT  | LoginPage.password_field | 123456                    |                  |
+| TC_LOGIN_01 |    4 | CLICK       | LoginPage.login_button   |                           |                  |
+| TC_LOGIN_01 |    5 | VERIFY_TEXT | LoginPage.message        |                           | Login successful |
 
 ---
 
@@ -51,15 +51,15 @@ Dùng để xác định một test case.
 Quy ước:
 
 ```text
-TC_<FUNCTION>_<NUMBER>
+<FUNCTION>_<NUMBER>
 ```
 
 Ví dụ:
 
 ```text
-TC_LOGIN_01
-TC_SEARCH_01
-TC_CART_01
+LOGIN_01
+SEARCH_01
+CART_01
 ```
 
 Các step có cùng `TestCaseID` thuộc cùng một test case.
@@ -90,11 +90,10 @@ Tên keyword phải tồn tại trong Keyword Registry.
 
 Ví dụ:
 
-```text
-NAVIGATE
-ENTER_TEXT
-CLICK
-VERIFY_TEXT
+```VerifyText
+CloseBrowser
+VerifyElement
+VerifyAttribute
 ```
 
 Không được tự ý tạo keyword mới trong Excel nếu keyword đó chưa được định nghĩa trong Keyword Specification.
@@ -189,14 +188,14 @@ vào keyword.
 
 ### Keyword có Data
 
-| Keyword | Data |
-|---|---|
-| `ENTER_TEXT` | Bắt buộc |
-| `NAVIGATE` | Bắt buộc |
-| `CLICK` | Không |
-| `CLEAR_TEXT` | Không |
-| `VERIFY_TEXT` | Không |
-| `VERIFY_ERROR` | Không |
+| Keyword        | Data     |
+| -------------- | -------- |
+| `ENTER_TEXT`   | Bắt buộc |
+| `NAVIGATE`     | Bắt buộc |
+| `CLICK`        | Không    |
+| `CLEAR_TEXT`   | Không    |
+| `VERIFY_TEXT`  | Không    |
+| `VERIFY_ERROR` | Không    |
 
 ---
 
@@ -233,18 +232,18 @@ NAVIGATE
 
 ## 7. Ma trận Keyword ↔ Target ↔ Data ↔ Expected
 
-| Keyword | Target | Data | Expected |
-|---|---|---|---|
-| `NAVIGATE` | Không | Có | Không |
-| `BACK` | Không | Không | Không |
-| `REFRESH` | Không | Không | Không |
-| `ENTER_TEXT` | Có | Có | Không |
-| `CLEAR_TEXT` | Có | Không | Không |
-| `CLICK` | Có | Không | Không |
-| `VERIFY_TEXT` | Có | Không | Có |
-| `VERIFY_URL` | Không | Không | Có |
-| `VERIFY_ELEMENT_VISIBLE` | Có | Không | Không |
-| `VERIFY_ERROR` | Có | Không | Có |
+| Keyword                  | Target | Data  | Expected |
+| ------------------------ | ------ | ----- | -------- |
+| `NAVIGATE`               | Không  | Có    | Không    |
+| `BACK`                   | Không  | Không | Không    |
+| `REFRESH`                | Không  | Không | Không    |
+| `ENTER_TEXT`             | Có     | Có    | Không    |
+| `CLEAR_TEXT`             | Có     | Không | Không    |
+| `CLICK`                  | Có     | Không | Không    |
+| `VERIFY_TEXT`            | Có     | Không | Có       |
+| `VERIFY_URL`             | Không  | Không | Có       |
+| `VERIFY_ELEMENT_VISIBLE` | Có     | Không | Không    |
+| `VERIFY_ERROR`           | Có     | Không | Có       |
 
 Quy tắc này giúp tránh việc Excel chứa dữ liệu không cần thiết.
 
@@ -436,23 +435,23 @@ Keyword VERIFY_TEXT requires Expected
 
 ### Login thành công
 
-| TestCaseID | Step | Keyword | Target | Data | Expected |
-|---|---:|---|---|---|---|
-| TC_LOGIN_01 | 1 | NAVIGATE | | `/login` | |
-| TC_LOGIN_01 | 2 | ENTER_TEXT | LoginPage.username_field | admin | |
-| TC_LOGIN_01 | 3 | ENTER_TEXT | LoginPage.password_field | 123456 | |
-| TC_LOGIN_01 | 4 | CLICK | LoginPage.login_button | | |
-| TC_LOGIN_01 | 5 | VERIFY_TEXT | HomePage.page_title | | Welcome |
+| TestCaseID  | Step | Keyword     | Target                   | Data     | Expected |
+| ----------- | ---: | ----------- | ------------------------ | -------- | -------- |
+| TC_LOGIN_01 |    1 | NAVIGATE    |                          | `/login` |          |
+| TC_LOGIN_01 |    2 | ENTER_TEXT  | LoginPage.username_field | admin    |          |
+| TC_LOGIN_01 |    3 | ENTER_TEXT  | LoginPage.password_field | 123456   |          |
+| TC_LOGIN_01 |    4 | CLICK       | LoginPage.login_button   |          |          |
+| TC_LOGIN_01 |    5 | VERIFY_TEXT | HomePage.page_title      |          | Welcome  |
 
 ### Login thất bại
 
-| TestCaseID | Step | Keyword | Target | Data | Expected |
-|---|---:|---|---|---|---|
-| TC_LOGIN_02 | 1 | NAVIGATE | | `/login` | |
-| TC_LOGIN_02 | 2 | ENTER_TEXT | LoginPage.username_field | wrong_user | |
-| TC_LOGIN_02 | 3 | ENTER_TEXT | LoginPage.password_field | wrong_pass | |
-| TC_LOGIN_02 | 4 | CLICK | LoginPage.login_button | | |
-| TC_LOGIN_02 | 5 | VERIFY_ERROR | LoginPage.error_message | | Invalid username or password |
+| TestCaseID  | Step | Keyword      | Target                   | Data       | Expected                     |
+| ----------- | ---: | ------------ | ------------------------ | ---------- | ---------------------------- |
+| TC_LOGIN_02 |    1 | NAVIGATE     |                          | `/login`   |                              |
+| TC_LOGIN_02 |    2 | ENTER_TEXT   | LoginPage.username_field | wrong_user |                              |
+| TC_LOGIN_02 |    3 | ENTER_TEXT   | LoginPage.password_field | wrong_pass |                              |
+| TC_LOGIN_02 |    4 | CLICK        | LoginPage.login_button   |            |                              |
+| TC_LOGIN_02 |    5 | VERIFY_ERROR | LoginPage.error_message  |            | Invalid username or password |
 
 ---
 
