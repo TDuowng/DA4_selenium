@@ -37,11 +37,6 @@
 
 ## 4. Test Data cho Keyword (định dạng file test case)
 
-### 4.1 Cấu trúc file
-
-data/keyword_tests/
-├── login_test.json / .csv
-
 ### 4.2 Schema mỗi bước
 
 - Step (số thứ tự)

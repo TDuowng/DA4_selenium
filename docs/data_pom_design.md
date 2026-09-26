@@ -20,11 +20,9 @@ Doc này mô tả thiết kế chi tiết của **Data Layer** và **Page Object
 - **Data Layer** không phụ thuộc Selenium — chỉ đọc/parse file, có thể
   test độc lập không cần trình duyệt.
 
-```
 Test Layer
-   ├──> Data Layer      (lấy dữ liệu)
-   └──> Page Object ──> WebDriver ──> Web Application
-```
+├──> Data Layer (lấy dữ liệu)
+└──> Page Object ──> WebDriver ──> Web Application
 
 ## 3. Data Layer
 
@@ -32,7 +30,6 @@ Test Layer
 
 Chọn nhiều kiểu định dạng như .json, .csv, .sqlite
 
-```
 data/
 ├── login_data.json
 ├── login_data.csv
@@ -40,7 +37,6 @@ data/
 ├── search_data.json
 └── form_data.json
 ...
-```
 
 ### 3.2 Data Model
 
@@ -203,7 +199,7 @@ LOCATORS = {
   cần đọc hiểu ý nghĩa, không cần biết chi tiết implement.
 - Method business-level luôn trả về `None` hoặc dữ liệu cần assert
   (không trả về `WebElement` ra ngoài Page Object).
-- Mỗi Page kế thừa `BasePage`, không kế thừa lẫn nhau giữa các Page.
+- Mỗi Page kế thừa `BasePage`, không kế thừa lẫn nhau giữa các Page
 
 ### 4.4 Ví dụ: LoginPage
 
@@ -240,18 +236,16 @@ class LoginPage(BasePage):
 
 ## 5. Sơ đồ tương tác Data ↔ POM ↔ Test Layer
 
-```
 test_login.py
-   │
-   ├── load_login_data() ──> [LoginData, LoginData, ...]
-   │
-   └── for each LoginData:
-          LoginPage(driver).login(username, password)
-                │
-                └── BasePage.type_text() / click()
-                        │
-                        └── Selenium WebDriver ──> Browser
-```
+│
+├── load_login_data() ──> [LoginData, LoginData, ...]
+│
+└── for each LoginData:
+LoginPage(driver).login(username, password)
+│
+└── BasePage.type_text() / click()
+│
+└── Selenium WebDriver ──> Browser
 
 ## 6. Quy ước coding & checklist review
 
