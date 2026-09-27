@@ -2,171 +2,200 @@
 
 ## 1. Mục tiêu & phạm vi
 
-- Doc này mô tả thiết kế Keyword Engine — lớp điều phối đứng giữa
-  Test Layer/Test Data và Page Object Layer.
-- Không thay thế BasePage/Page Object; Keyword Engine chỉ tra registry
-  và gọi lại các hàm đã có sẵn ở đó.
-- Phạm vi: chỉ định nghĩa ~8-10 keyword cấp thấp cần cho các test case
-  chính, không xây dựng engine tổng quát cho mọi trường hợp.
+Keyword Layer định nghĩa contract và cơ chế thực thi keyword.
 
-## 2. Vị trí trong kiến trúc tổng thể
+Phạm vi:
 
-- Test Layer gọi Keyword Engine cho từng bước test.
-- Test Data cung cấp danh sách bước dạng (Keyword, Object, Value).
-- Keyword Engine tra registry rồi gọi hàm thật trong Page Object/BasePage.
+- Chuẩn hóa tên keyword.
+- Map keyword tới implementation.
+- Resolve keyword qua `KeywordRegistry.resolve()`.
+- Nhận `Target`, `Data`, `Expected` từ Test Executor.
+- Không chứa locator Selenium trong Excel hoặc keyword.
 
-## 3. Danh sách Keyword
+Framework dùng một danh sách keyword chính thức; không tạo thêm nhánh business-keyword riêng.
 
-| Keyword              | Cấp  | Tham số             | Map tới hàm                    | Mô tả                                              |
-| -------------------- | ---- | ------------------- | ------------------------------ | -------------------------------------------------- |
-| OpenBrowser          | Thấp | url                 | `base_page.open_browser`       | Mở browser, load URL                               |
-| CloseBrowser         | Thấp | —                   | `base_page.close_browser`      | Đóng browser                                       |
-| InputText            | Thấp | object, value       | `base_page.type_text`          | Nhập text vào field                                |
-| ClickElement         | Thấp | object              | `base_page.click`              | Click 1 element                                    |
-| SelectDropdown       | Thấp | object, value       | `base_page.select_option`      | Chọn option trong dropdown                         |
-| CheckCheckbox        | Thấp | object              | `base_page.check`              | Tick checkbox/radio                                |
-| WaitForElement       | Thấp | object              | `base_page.wait_for_visible`   | Chờ element xuất hiện                              |
-| VerifyText           | Thấp | object, value       | `base_page.assert_text_equals` | Assert nội dung text                               |
-| VerifyElementVisible | Thấp | object              | `base_page.assert_visible`     | Assert element hiển thị                            |
-| Login                | Cao  | username, password  | `login_page.login`             | Gộp: InputText×2 + ClickElement                    |
-| Search               | Cao  | keyword             | `search_page.search`           | Gộp: InputText + ClickElement                      |
-| SubmitForm           | Cao  | field_values (dict) | `form_page.submit_form`        | Gộp: nhiều InputText/SelectDropdown + ClickElement |
+## 2. Vị trí trong kiến trúc
 
-> Ghi chú: Keyword "Cao" là các hàm business-level đã có trong Page Object
-> (ví dụ login, search) — được đăng ký thẳng vào registry, không viết lại logic mới.
-
-## 4. Test Data cho Keyword (định dạng file test case)
-
-### 4.2 Schema mỗi bước
-
-- Step (số thứ tự)
-- Keyword (tên keyword, phải tồn tại trong registry)
-- Object (locator key, tra trong file locators)
-- Value (dữ liệu nhập/kỳ vọng, có thể để trống)
-
-## 5. Keyword Registry & Keyword Engine
-
-### 5.1 Cấu trúc Registry
-
-- Dict ánh xạ tên keyword → hàm thật (có ví dụ code)
-- Quy ước đặt tên keyword (PascalCase, động từ + đối tượng)
-- Ví dụ:
-
-```python
-        from pages.base_page import base_page
-        from pages.login_page import login_page
-        from pages.search_page import search_page
-        from pages.form_page import form_page
-
-        KEYWORD_REGISTRY = { # --- Keyword cấp thấp: map trực tiếp tới BasePage ---
-        "OpenBrowser": base_page.open_browser,
-        "CloseBrowser": base_page.close_browser,
-        "InputText": base_page.type_text,
-        "ClickElement": base_page.click,
-        "SelectDropdown": base_page.select_option,
-        "CheckCheckbox": base_page.check,
-        "WaitForElement": base_page.wait_for_visible,
-        "VerifyText": base_page.assert_text_equals,
-        "VerifyElementVisible": base_page.assert_visible,
-
-            # --- Keyword cấp cao: map tới Page Object business method ---
-            "Login": login_page.login,
-            "Search": search_page.search,
-            "SubmitForm": form_page.submit_form,
-
-        }
+```text
+Excel
+  ↓
+TestExecutor
+  ↓
+KeywordExecutor
+  ↓
+KeywordRegistry.resolve()
+  ↓
+Keyword Implementation
+  ↓
+Page Object / BasePage
+  ↓
+Selenium
 ```
 
-### 5.2 Keyword Engine — execute_keyword()
+## 3. Keyword chính thức
 
-- Input: tên keyword, tham số
-- Xử lý: tra registry → validate tham số → gọi hàm → bắt lỗi
-- Output: kết quả / raise lỗi rõ tên keyword + bước đang chạy
-- Ví dụ:
+Quy ước tên: **PascalCase**.
+
+| Keyword | Nhóm | Target | Data | Expected | Mô tả |
+|---|---|---|---|---|---|
+| `Navigate` | Navigation | Page key | Không | Không | Điều hướng |
+| `SetText` | Input | Có | Có | Không | Nhập text |
+| `ClickElement` | Action | Có | Không | Không | Click element |
+| `VerifyUrl` | Verification | Không | Không | Có | Kiểm tra URL |
+| `VerifyText` | Verification | Có | Không | Có | Kiểm tra text |
+| `VerifyFieldState` | Verification | Có | Không | Có | Kiểm tra trạng thái field |
+| `VerifyAttribute` | Verification | Có | Không | Có | Kiểm tra attribute |
+| `VerifyElement` | Verification | Có | Không | Có | Kiểm tra element |
+| `VerifyTextContains` | Verification | Có | Không | Có | Kiểm tra text chứa chuỗi |
+| `ClearText` | Input | Có | Không | Không | Xóa text |
+| `VerifyElementCount` | Verification | Có | Không | Có | Kiểm tra số lượng |
+| `VerifyElementNotExist` | Verification | Có | Không | Không | Kiểm tra element không tồn tại |
+| `VerifyCalculation` | Verification | Có | Không | Có | Kiểm tra phép tính |
+| `VerifyKeyword` | Verification | Có | Theo contract | Có | Placeholder cho verification keyword đã đăng ký |
+| `AddToCart` | Action | Có | Theo contract | Theo contract | Thêm sản phẩm vào giỏ |
+| `Login` | Action | Theo contract | Theo contract | Theo contract | Thực hiện thao tác login được expose |
+| `VerifyDataMatch` | Verification | Có | Không | Có | So khớp dữ liệu |
+| `SetProductOutOfStock` | Action | Có | Theo contract | Không | Thiết lập trạng thái hết hàng |
+| `ClickOutside` | Action | Có | Không | Không | Click ngoài element |
+| `SelectOption` | Action | Có | Có | Không | Chọn option |
+
+`VerifyKeyword` là placeholder/interface pattern, không phải wildcard cho phép nhập keyword tùy ý vào Excel.
+
+## 4. Browser lifecycle
+
+Browser lifecycle là **System/Lifecycle**, không xuất hiện trong Excel.
+
+```text
+DriverManager + pytest fixture
+```
+
+Do đó không dùng:
+
+```text
+OpenBrowser
+CloseBrowser
+```
+
+trong test step.
+
+## 5. Test Data
+
+Nguồn test case chính thức là Excel:
+
+```text
+data/test_cases.xlsx
+```
+
+Schema:
+
+```text
+TestCaseID | Step | Keyword | Target | Data | Expected
+```
+
+Không dùng JSON/CSV/SQLite làm nguồn test case chính.
+
+## 6. Keyword Registry
+
+### Interface chính thức
 
 ```python
+class KeywordRegistry:
+    def __init__(self, keyword_map):
+        self._map = keyword_map
 
-    from keywords.registry import KEYWORD_REGISTRY
-    from utils.logger import logger
-    from utils.screenshot import take_screenshot
-
-    def execute_keyword(step_number: int, keyword: str, \*args, \*\*kwargs):
-    """
-    Thực thi 1 keyword theo tên, log lại kết quả từng bước.
-    step_number: số thứ tự bước, dùng để log/debug khi fail.
-    keyword: tên keyword, phải có trong KEYWORD_REGISTRY.
-    args/kwargs: tham số truyền vào hàm thật (object, value...).
-    """
-    if keyword not in KEYWORD_REGISTRY:
-    raise ValueError(
-    f"[Step {step_number}] Keyword '{keyword}' chưa được đăng ký trong registry"
-    )
-
-        action = KEYWORD_REGISTRY[keyword]
-        logger.info(f"[Step {step_number}] Thực thi keyword '{keyword}' với args={args}")
-
+    def resolve(self, keyword):
         try:
-            result = action(*args, **kwargs)
-            logger.info(f"[Step {step_number}] Keyword '{keyword}' thành công")
-            return result
-        except Exception as e:
-            logger.error(f"[Step {step_number}] Keyword '{keyword}' thất bại: {e}")
-            take_screenshot(f"fail_step{step_number}_{keyword}")
-            raise
+            return self._map[keyword]
+        except KeyError:
+            raise KeyError(f"Keyword not registered: {keyword}")
 ```
 
-### 5.3 Xử lý lỗi & logging
+`resolve()` là interface chính thức của Registry.
 
-- Khi 1 keyword fail: log tên keyword, object, value, số bước
-- Gọi Screenshot Utility trước khi raise lỗi (giữ nhất quán với Utility Layer)
-- Ví dụ:
+Có thể có map nội bộ:
 
 ```python
-
-  from keywords.registry import KEYWORD_REGISTRY
-  from utils.logger import logger
-  from utils.screenshot import take_screenshot
-
-        def execute_keyword(step_number: int, keyword: str, *args, **kwargs):
-            """
-            Thực thi 1 keyword theo tên, log lại kết quả từng bước.
-            step_number: số thứ tự bước, dùng để log/debug khi fail.
-            keyword: tên keyword, phải có trong KEYWORD_REGISTRY.
-            args/kwargs: tham số truyền vào hàm thật (object, value...).
-            """
-            if keyword not in KEYWORD_REGISTRY:
-                raise ValueError(
-                    f"[Step {step_number}] Keyword '{keyword}' chưa được đăng ký trong registry"
-                )
-
-            action = KEYWORD_REGISTRY[keyword]
-            logger.info(f"[Step {step_number}] Thực thi keyword '{keyword}' với args={args}")
-
-            try:
-                result = action(*args, **kwargs)
-                logger.info(f"[Step {step_number}] Keyword '{keyword}' thành công")
-                return result
-            except Exception as e:
-                logger.error(f"[Step {step_number}] Keyword '{keyword}' thất bại: {e}")
-                take_screenshot(f"fail_step{step_number}_{keyword}")
-                raise
+KEYWORD_MAP = {
+    "Navigate": ...,
+    "SetText": ...,
+    "ClickElement": ...,
+}
 ```
 
-## 6. Luồng thực thi 1 test case bằng keyword
+Nhưng `KeywordExecutor` không được gọi trực tiếp:
 
-Test Layer đọc file test case → lặp qua từng bước →
-gọi execute_keyword(step) → Keyword Engine gọi Page Object/BasePage →
-kết quả từng bước được log lại → Reporting Layer tổng hợp
+```python
+KEYWORD_MAP["SetText"]
+```
 
-## 7. Giới hạn & việc không làm (Out of scope)
+Mà phải gọi:
 
-- Không hỗ trợ keyword lồng nhau (keyword gọi keyword) trong bản này
-- Không tự sinh keyword mới từ UI, danh sách keyword là cố định, khai báo tay
-- Không validate schema Test Data bằng thư viện riêng (làm thủ công trong loader)
+```python
+registry.resolve("SetText")
+```
 
-## 8. Quy ước & checklist review
+## 7. Keyword Execution
 
-- [ ] Mọi keyword trong Test Data đều có trong registry
-- [ ] Không có logic UI mới viết trực tiếp trong Keyword Engine
-- [ ] Mỗi keyword có ít nhất 1 ví dụ trong mục 3
-- [ ] Lỗi khi thực thi keyword đều được log kèm số bước
+`KeywordExecutor` nhận:
+
+```text
+keyword
+Target
+data
+expected
+context
+```
+
+và xử lý:
+
+```text
+resolve(keyword)
+     ↓
+handler
+     ↓
+target resolution
+     ↓
+POM/BasePage
+```
+
+## 8. Target
+
+Target là logical reference:
+
+```text
+<PageObject>.<element>
+```
+
+Ví dụ:
+
+```text
+LoginPage.username_field
+SearchPage.input
+ProductPage.add_to_cart_button
+```
+
+Không ghi XPath/CSS/ID trong Excel.
+
+## 9. Xử lý lỗi
+
+Tối thiểu phải xử lý:
+
+- Keyword không tồn tại.
+- Target sai format.
+- Page Object không tồn tại.
+- Element key không tồn tại.
+- Keyword yêu cầu Data nhưng Data thiếu.
+- Verification thiếu Expected.
+- Handler thực thi thất bại.
+
+Lỗi nên có `TestCaseID`, `Step`, `Keyword`, `Target`.
+
+## 10. Checklist
+
+- [ ] Keyword PascalCase.
+- [ ] Không có browser lifecycle trong Excel.
+- [ ] Excel là nguồn test data chính.
+- [ ] `KeywordRegistry.resolve()` là interface chính thức.
+- [ ] KeywordExecutor không truy cập map nội bộ trực tiếp.
+- [ ] Target là logical reference.
+- [ ] Locator nằm trong Page Object.

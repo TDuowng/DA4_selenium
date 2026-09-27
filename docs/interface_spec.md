@@ -2,29 +2,29 @@
 
 ## 1. Mục đích
 
-Tài liệu này định nghĩa **hợp đồng giao tiếp** giữa:
+Định nghĩa hợp đồng giao tiếp giữa Excel Test Case, Keyword Layer và POM.
 
 ```text
-Excel Test Case
-      ↓
+Excel
+ ↓
+TestExecutor
+ ↓
+KeywordExecutor
+ ↓
+KeywordRegistry.resolve()
+ ↓
 Keyword
-      ↓
+ ↓
 Target
-      ↓
+ ↓
 Page Object
-      ↓
-Locator
-      ↓
-Selenium WebDriver
+ ↓
+LOCATORS
+ ↓
+Selenium
 ```
 
-Mục tiêu là đảm bảo người thiết kế test case và người triển khai framework sử dụng cùng một quy ước.
-
----
-
 ## 2. Cấu trúc một Test Step
-
-Mỗi test step được biểu diễn bằng:
 
 ```text
 TestCaseID | Step | Keyword | Target | Data | Expected
@@ -32,79 +32,40 @@ TestCaseID | Step | Keyword | Target | Data | Expected
 
 Ví dụ:
 
-| TestCaseID  | Step | Keyword     | Target                   | Data                      | Expected         |
-| ----------- | ---: | ----------- | ------------------------ | ------------------------- | ---------------- |
-| TC_LOGIN_01 |    1 | NAVIGATE    |                          | https://example.com/login |                  |
-| TC_LOGIN_01 |    2 | ENTER_TEXT  | LoginPage.username_field | admin                     |                  |
-| TC_LOGIN_01 |    3 | ENTER_TEXT  | LoginPage.password_field | 123456                    |                  |
-| TC_LOGIN_01 |    4 | CLICK       | LoginPage.login_button   |                           |                  |
-| TC_LOGIN_01 |    5 | VERIFY_TEXT | LoginPage.message        |                           | Login successful |
+| TestCaseID | Step | Keyword | Target | Data | Expected |
+|---|---:|---|---|---|---|
+| TC_LOGIN_01 | 1 | Navigate | LoginPage | | |
+| TC_LOGIN_01 | 2 | SetText | LoginPage.username_field | admin | |
+| TC_LOGIN_01 | 3 | SetText | LoginPage.password_field | 123456 | |
+| TC_LOGIN_01 | 4 | ClickElement | LoginPage.login_button | | |
+| TC_LOGIN_01 | 5 | VerifyText | LoginPage.message | | Login successful |
 
----
+Browser lifecycle không nằm trong bảng step.
 
-## 3. Quy ước từng trường
+## 3. Quy ước trường
 
 ### 3.1 TestCaseID
 
-Dùng để xác định một test case.
-
-Quy ước:
+Format:
 
 ```text
-<FUNCTION>_<NUMBER>
+TC_<FUNCTION>_<NUMBER>
 ```
-
-Ví dụ:
-
-```text
-LOGIN_01
-SEARCH_01
-CART_01
-```
-
-Các step có cùng `TestCaseID` thuộc cùng một test case.
-
----
 
 ### 3.2 Step
 
-Là thứ tự thực thi trong một test case.
-
-Ví dụ:
-
-```text
-1
-2
-3
-4
-5
-```
-
-Step bắt đầu từ 1 và tăng dần trong cùng TestCaseID.
-
----
+Số thứ tự thực thi, bắt đầu từ 1.
 
 ### 3.3 Keyword
 
-Tên keyword phải tồn tại trong Keyword Registry.
-
-Ví dụ:
-
-```VerifyText
-CloseBrowser
-VerifyElement
-VerifyAttribute
-```
-
-Không được tự ý tạo keyword mới trong Excel nếu keyword đó chưa được định nghĩa trong Keyword Specification.
-
----
+- PascalCase.
+- Phải tồn tại trong Keyword Specification.
+- Phải được đăng ký trong Registry.
+- Không chứa locator.
 
 ### 3.4 Target
 
-Target xác định Page Object và element mà keyword thao tác.
-
-Format chính thức:
+Logical reference:
 
 ```text
 <PageObject>.<element>
@@ -113,373 +74,171 @@ Format chính thức:
 Ví dụ:
 
 ```text
-register.username
-register.email
-register.password
+LoginPage.username_field
+SearchPage.input
+ProductPage.name
 ```
 
-Target không chứa XPath/CSS/ID trực tiếp.
-
-Sai:
-
-```text
-//input[@id='username']
-#username
-button[type='submit']
-```
-
-Đúng:
-
-```text
-register.username
-
-```
-
----
+Không dùng XPath/CSS/ID trực tiếp.
 
 ## 4. Target Resolution
 
-Khi framework nhận:
-
 ```text
-Target = register.username
-
-```
-
-nó thực hiện:
-
-```text
-register.username
+LoginPage.username_field
         ↓
-Page Object = LoginPage
-        ↓
-Element key = username_field
+LoginPage
         ↓
 LoginPage.LOCATORS["username_field"]
         ↓
 (By.ID, "username")
         ↓
-Selenium WebDriver
+Selenium
 ```
 
-Target vì vậy là **logical reference**, không phải locator Selenium.
-
----
+Không có file locator riêng.
 
 ## 5. Quy tắc Data
 
-`Data` chứa dữ liệu đầu vào của keyword.
+Nguồn test case là Excel.
 
-Ví dụ:
+Các keyword có Data theo contract hiện tại gồm:
 
-```text
-ENTER_TEXT
-Target = register.username
-Data = admin
-```
+- `SetText`
+- `SelectOption`
+- Các keyword khác chỉ có Data khi contract của keyword đó quy định.
 
-Framework truyền:
-
-```text
-admin
-```
-
-vào keyword.
-
-### Keyword có Data
-
-| Keyword        | Data     |
-| -------------- | -------- |
-| `ENTER_TEXT`   | Bắt buộc |
-| `NAVIGATE`     | Bắt buộc |
-| `CLICK`        | Không    |
-| `CLEAR_TEXT`   | Không    |
-| `VERIFY_TEXT`  | Không    |
-| `VERIFY_ERROR` | Không    |
-
----
+`Navigate` dùng page key/target; URL/base URL thuộc Configuration Layer khi cần, không hardcode URL trong từng Excel step nếu không cần.
 
 ## 6. Quy tắc Expected
 
-`Expected` chỉ được sử dụng cho các bước verification.
+`Expected` dùng cho verification.
 
 Ví dụ:
 
 ```text
-VERIFY_TEXT
+VerifyText
 Target = HomePage.page_title
 Expected = Welcome
 ```
 
-hoặc:
-
-```text
-VERIFY_ERROR
-Target = LoginPage.error_message
-Expected = Invalid username or password
-```
-
-Các keyword thao tác không cần Expected:
-
-```text
-CLICK
-ENTER_TEXT
-CLEAR_TEXT
-NAVIGATE
-```
-
----
-
 ## 7. Ma trận Keyword ↔ Target ↔ Data ↔ Expected
 
-| Keyword                  | Target | Data  | Expected |
-| ------------------------ | ------ | ----- | -------- |
-| `NAVIGATE`               | Không  | Có    | Không    |
-| `BACK`                   | Không  | Không | Không    |
-| `REFRESH`                | Không  | Không | Không    |
-| `ENTER_TEXT`             | Có     | Có    | Không    |
-| `CLEAR_TEXT`             | Có     | Không | Không    |
-| `CLICK`                  | Có     | Không | Không    |
-| `VERIFY_TEXT`            | Có     | Không | Có       |
-| `VERIFY_URL`             | Không  | Không | Có       |
-| `VERIFY_ELEMENT_VISIBLE` | Có     | Không | Không    |
-| `VERIFY_ERROR`           | Có     | Không | Có       |
-
-Quy tắc này giúp tránh việc Excel chứa dữ liệu không cần thiết.
-
----
+| Keyword | Target | Data | Expected |
+|---|---|---|---|
+| `Navigate` | Page key | Không | Không |
+| `SetText` | Có | Có | Không |
+| `ClickElement` | Có | Không | Không |
+| `VerifyUrl` | Không | Không | Có |
+| `VerifyText` | Có | Không | Có |
+| `VerifyFieldState` | Có | Không | Có |
+| `VerifyAttribute` | Có | Không | Có |
+| `VerifyElement` | Có | Không | Có |
+| `VerifyTextContains` | Có | Không | Có |
+| `ClearText` | Có | Không | Không |
+| `VerifyElementCount` | Có | Không | Có |
+| `VerifyElementNotExist` | Có | Không | Không |
+| `VerifyCalculation` | Có | Không | Có |
+| `VerifyKeyword` | Có | Theo contract | Có |
+| `AddToCart` | Có | Theo contract | Theo contract |
+| `Login` | Theo contract | Theo contract | Theo contract |
+| `VerifyDataMatch` | Có | Không | Có |
+| `SetProductOutOfStock` | Có | Theo contract | Không |
+| `ClickOutside` | Có | Không | Không |
+| `SelectOption` | Có | Có | Không |
 
 ## 8. Mapping Keyword → POM
 
-Ví dụ:
-
 ```text
-Keyword:
-    ENTER_TEXT
-
-Target:
-    LoginPage.username_field
-
-Data:
-    admin
-```
-
-Luồng:
-
-```text
-Excel
-  ↓
-KeywordExecutor
-  ↓
-ENTER_TEXT
-  ↓
+SetText
+Target = LoginPage.username_field
+Data = admin
+        ↓
+KeywordRegistry.resolve("SetText")
+        ↓
+Keyword handler
+        ↓
 LoginPage.username_field
-  ↓
-LoginPage
-  ↓
-BasePage / Page method
-  ↓
-LOCATORS["username_field"]
-  ↓
-(By.ID, "username")
-  ↓
+        ↓
+LOCATORS
+        ↓
+BasePage.enter_text()
+        ↓
 Selenium
 ```
 
----
+## 9. Naming Convention
 
-## 9. Mapping Verification
-
-Ví dụ:
+### Keyword
 
 ```text
-Keyword = VERIFY_TEXT
-Target = LoginPage.message
-Expected = Login successful
+Navigate
+SetText
+ClickElement
+VerifyText
 ```
 
-Luồng:
-
-```text
-VERIFY_TEXT
-     ↓
-LoginPage.message
-     ↓
-POM lấy actual text
-     ↓
-actual = "Login successful"
-     ↓
-so sánh với Expected
-     ↓
-PASS
-```
-
-Nếu:
-
-```text
-actual != expected
-```
-
-thì:
-
-```text
-FAIL
-```
-
----
-
-## 10. Target Naming Convention
-
-Tên element phải mô tả ý nghĩa của element, không mô tả locator kỹ thuật.
-
-Nên dùng:
-
-```text
-username_field
-password_field
-login_button
-error_message
-search_box
-product_title
-add_to_cart_button
-```
-
-Không nên dùng:
-
-```text
-id_username
-xpath_login_button
-css_button_01
-input_1
-button_2
-```
-
-Lý do: locator có thể thay đổi nhưng ý nghĩa nghiệp vụ của element không nhất thiết thay đổi.
-
----
-
-## 11. Page Object Naming Convention
-
-Tên Page Object:
-
-```text
-<PageName>Page
-```
-
-Ví dụ:
+### Page Object
 
 ```text
 LoginPage
-HomePage
 SearchPage
 ProductPage
 CartPage
 ```
 
-Target hoàn chỉnh:
+### Element
 
 ```text
-LoginPage.username_field
-HomePage.search_box
-ProductPage.add_to_cart_button
-CartPage.checkout_button
+username_field
+login_button
+error_message
+product_name
 ```
 
----
+## 10. Lỗi Interface
 
-## 12. Quy tắc lỗi interface
+Framework phải báo rõ:
 
-Framework phải báo lỗi rõ ràng nếu:
+1. Keyword không tồn tại.
+2. Target sai format.
+3. Page Object không tồn tại.
+4. Element key không tồn tại.
+5. Keyword yêu cầu Data nhưng Data thiếu.
+6. Verification thiếu Expected.
+7. Handler thực thi thất bại.
 
-### Keyword không tồn tại
+Lỗi nên có `TestCaseID`, `Step`, `Keyword`, `Target`.
 
-```text
-Unknown keyword: ENTER_USERNAME
-```
-
-### Target không hợp lệ
-
-```text
-Invalid target: LoginPage
-Expected format: PageName.elementName
-```
-
-### Page Object không tồn tại
-
-```text
-Page not found: LoginPage
-```
-
-### Element key không tồn tại
-
-```text
-Element not found:
-LoginPage.username_field
-```
-
-### Keyword yêu cầu Data nhưng Data trống
-
-```text
-Keyword ENTER_TEXT requires Data
-```
-
-### Verification thiếu Expected
-
-```text
-Keyword VERIFY_TEXT requires Expected
-```
-
----
-
-## 13. Ví dụ hoàn chỉnh
+## 11. Ví dụ hoàn chỉnh
 
 ### Login thành công
 
-| TestCaseID  | Step | Keyword     | Target                   | Data     | Expected |
-| ----------- | ---: | ----------- | ------------------------ | -------- | -------- |
-| TC_LOGIN_01 |    1 | NAVIGATE    |                          | `/login` |          |
-| TC_LOGIN_01 |    2 | ENTER_TEXT  | LoginPage.username_field | admin    |          |
-| TC_LOGIN_01 |    3 | ENTER_TEXT  | LoginPage.password_field | 123456   |          |
-| TC_LOGIN_01 |    4 | CLICK       | LoginPage.login_button   |          |          |
-| TC_LOGIN_01 |    5 | VERIFY_TEXT | HomePage.page_title      |          | Welcome  |
+| TestCaseID | Step | Keyword | Target | Data | Expected |
+|---|---:|---|---|---|---|
+| TC_LOGIN_01 | 1 | Navigate | LoginPage | | |
+| TC_LOGIN_01 | 2 | SetText | LoginPage.username_field | admin | |
+| TC_LOGIN_01 | 3 | SetText | LoginPage.password_field | 123456 | |
+| TC_LOGIN_01 | 4 | ClickElement | LoginPage.login_button | | |
+| TC_LOGIN_01 | 5 | VerifyText | HomePage.page_title | | Welcome |
 
 ### Login thất bại
 
-| TestCaseID  | Step | Keyword      | Target                   | Data       | Expected                     |
-| ----------- | ---: | ------------ | ------------------------ | ---------- | ---------------------------- |
-| TC_LOGIN_02 |    1 | NAVIGATE     |                          | `/login`   |                              |
-| TC_LOGIN_02 |    2 | ENTER_TEXT   | LoginPage.username_field | wrong_user |                              |
-| TC_LOGIN_02 |    3 | ENTER_TEXT   | LoginPage.password_field | wrong_pass |                              |
-| TC_LOGIN_02 |    4 | CLICK        | LoginPage.login_button   |            |                              |
-| TC_LOGIN_02 |    5 | VERIFY_ERROR | LoginPage.error_message  |            | Invalid username or password |
+| TestCaseID | Step | Keyword | Target | Data | Expected |
+|---|---:|---|---|---|---|
+| TC_LOGIN_02 | 1 | Navigate | LoginPage | | |
+| TC_LOGIN_02 | 2 | SetText | LoginPage.username_field | admin | |
+| TC_LOGIN_02 | 3 | SetText | LoginPage.password_field | wrongpass | |
+| TC_LOGIN_02 | 4 | ClickElement | LoginPage.login_button | | |
+| TC_LOGIN_02 | 5 | VerifyText | LoginPage.error_message | | Invalid username or password |
 
----
+## 12. Nguyên tắc cốt lõi
 
-## 14. Nguyên tắc cốt lõi
-
-```text
-Excel không biết XPath.
-Keyword không biết XPath.
-POM biết locator.
-Selenium thực thi locator.
-```
-
-Cụ thể:
-
-```text
-Excel
-  ↓
-Keyword + Target + Data + Expected
-  ↓
-Keyword Executor
-  ↓
-Keyword Library
-  ↓
-POM
-  ↓
-Locator
-  ↓
-Selenium
-```
-
-Đây là interface chính thức mà `test_data_spec.md`, `keyword_spec.md` và `pom_design.md` phải tuân theo.
+- Excel chỉ chứa test data và logical target.
+- Keyword PascalCase.
+- Browser lifecycle không xuất hiện trong Excel.
+- `KeywordRegistry.resolve()` là interface chính thức.
+- Target không chứa locator.
+- Locator nằm trong Page Object.
+- Không có `locators.py`.
+- Test flow nằm ở Core Executor.
+- Không có Test Layer → POM trực tiếp.
