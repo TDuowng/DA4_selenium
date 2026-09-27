@@ -4,17 +4,21 @@
 
 import math
 from keywords.common_keywords import CommonKeywords
-# from keywords.bmi_keywords import BmiKeywords
-# from keywords.login_keywords import LoginKeywords
-# from keywords.cart_keywords import CartKeywords
+from keywords.login_keywords import LoginKeywords
+from keywords.cart_keywords import CartKeywords
 from keywords.keyword_registry import registry  
 from config import URLS
 
 
 class KeywordExecutor:
-    # def __init__(self, driver):
-    #     self.library = Keywords(driver)
+    def __init__(self, driver):
+        self.libraries = {
+            "common": CommonKeywords(driver),
+            "login": LoginKeywords(driver),
+            "cart": CartKeywords(driver)
+        }
 
+    
     def _lookup(self, keyword, index):
         """
         Điểm DUY NHẤT gọi vào Keyword Registry.
@@ -60,9 +64,6 @@ class KeywordExecutor:
             raise ValueError(f"Bước {index}: expected BMI phải hữu hạn và dương")
 
     def execute(self, row):
-        """
-        Gọi hàm keyword tương ứng trong Keyword Library.
-        Trả về kết quả của library (PASS/FAIL hoặc raise exception nếu lỗi).
-        """
-        method_name, _, _ = self._lookup(row["keyword"], row["step"])
-        return getattr(self.library, method_name)(row["target"], row["data"], row["expected"])
+        source, method_name, _, _ = registry.resolve(row["keyword"])
+        library = self.libraries[source]
+        return getattr(library, method_name)(row["target"], row["data"], row["expected"])
