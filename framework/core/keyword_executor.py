@@ -4,9 +4,9 @@
 
 import math
 from keywords.common_keywords import CommonKeywords
-from keywords.login_keywords import LoginKeywords
-from keywords.cart_keywords import CartKeywords
-from keywords.keyword_registry import registry  
+from keywords.business_keywords import LoginKeywords
+from keywords.verification_keywords import VerificationKeywords
+from keywords.keyword_registry import registry
 from config import URLS
 
 
@@ -15,10 +15,8 @@ class KeywordExecutor:
         self.libraries = {
             "common": CommonKeywords(driver),
             "login": LoginKeywords(driver),
-            "cart": CartKeywords(driver)
         }
 
-    
     def _lookup(self, keyword, index):
         """
         Điểm DUY NHẤT gọi vào Keyword Registry.
@@ -26,9 +24,13 @@ class KeywordExecutor:
         chỉ cần sửa ở đây, không phải sửa validate_step()/execute().
         """
         try:
-            return registry.resolve(keyword)  # kỳ vọng: (method_name, targets, required)
+            return registry.resolve(
+                keyword
+            )  # kỳ vọng: (method_name, targets, required)
         except KeyError as error:
-            raise ValueError(f"Bước {index}: keyword chưa khai báo: {keyword}") from error
+            raise ValueError(
+                f"Bước {index}: keyword chưa khai báo: {keyword}"
+            ) from error
 
     def validate_step(self, row, index):
         """
@@ -66,4 +68,6 @@ class KeywordExecutor:
     def execute(self, row):
         source, method_name, _, _ = registry.resolve(row["keyword"])
         library = self.libraries[source]
-        return getattr(library, method_name)(row["target"], row["data"], row["expected"])
+        return getattr(library, method_name)(
+            row["target"], row["data"], row["expected"]
+        )
