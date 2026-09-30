@@ -6,6 +6,7 @@ from config import LOGIN_URL, TIMEOUT
 
 
 class LoginPage:
+
     LOCATORS = {
         "login.username": (By.ID, "userName"),
         "login.password": (By.ID, "password"),
