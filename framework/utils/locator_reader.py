@@ -34,27 +34,27 @@ class LocatorReader:
             value = row.get("Value")
 
             if not page:
-                raise ValueError("Locator Page cannot be empty.")
+                raise ValueError("Cột Page không được trống.")
 
             if not element:
-                raise ValueError("Locator Element cannot be empty.")
+                raise ValueError("Cột Element không được trống.")
 
             if locator_type not in self.LOCATOR_TYPES:
                 raise ValueError(
-                    f"Unsupported locator type "
-                    f"'{locator_type}' for "
+                    f"Locator chưa được khai báo "
+                    f"'{locator_type}' cho "
                     f"{page}.{element}."
                 )
 
             if value is None or str(value).strip() == "":
                 raise ValueError(
-                    f"Locator Value cannot be empty for " f"{page}.{element}."
+                    f"Cột Value không được trống vị trí " f"{page}.{element}."
                 )
 
             key = (page, element)
 
             if key in self._locators:
-                raise ValueError(f"Duplicate locator: {page}.{element}")
+                raise ValueError(f"Locator trùng lặp: {page}.{element}")
 
             self._locators[key] = (self.LOCATOR_TYPES[locator_type], str(value).strip())
 
@@ -62,10 +62,11 @@ class LocatorReader:
         key = (self._normalize_name(page), self._normalize_name(element))
 
         if key not in self._locators:
-            raise KeyError(f"Locator not found: {page}.{element}")
+            raise KeyError(f"Không tìm thấy Locator: {page}.{element}")
 
         return self._locators[key]
 
+    # -- Hàm chuẩn hóa str cho Page và Element: "LoginPage ", "loginpage", "LoginPage"
     @staticmethod
     def _normalize_name(value) -> str:
         if value is None:
