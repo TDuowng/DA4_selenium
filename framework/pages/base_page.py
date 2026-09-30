@@ -16,7 +16,7 @@ class BasePage:
 
     # Click an element on the page using a locator after waiting for it to be clickable
     def click_element(self, locator):
-        self.wait.until(EC.element_to_be_clickable(locator)).click
+        self.wait.until(EC.element_to_be_clickable(locator)).click()
 
     # Enter text into an input field on the page after clearing it first
     def enter_text(self, locator, text):
