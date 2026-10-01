@@ -3,14 +3,14 @@
 # Không sort để che lỗi thứ tự step, không return [] để biến lỗi thành skip.
 import pandas as pd
 
-from framework.utils.template_binding import (
+from utils.template_binding import (
     TEMPLATE_FIELDS,
     bind_template,
     validate_template,
 )
 
 STEPS_SHEET = "test_steps"
-CASES_SHEET = "test_case"
+CASES_SHEET = "test_cases"
 REQUIRED_CASE_FIELDS = {"case_id", "template_id"}  # các cột còn lại tuỳ template
 
 

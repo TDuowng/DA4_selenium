@@ -2,11 +2,11 @@
 # Chỉ hỗ trợ placeholder chiếm toàn ô như {username}; chưa có ngôn ngữ biểu thức.
 import re
 
-from framework.config import LOCATOR_FILE
-from framework.keywords.keyword_registry import build_default_registry
-from framework.keywords.keyword_spec import KEYWORD_SPEC, START_KEYWORDS
-from framework.keywords.target_resolver import TargetError, load_page_class
-from framework.utils.locator_reader import get_locator_reader
+from config import LOCATOR_FILE
+from keywords.keyword_registry import build_default_registry
+from keywords.keyword_spec import KEYWORD_SPEC, START_KEYWORDS
+from keywords.target_resolver import TargetError, load_page_class
+from utils.locator_reader import get_locator_reader
 
 REGISTRY = build_default_registry()
 

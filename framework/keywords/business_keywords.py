@@ -10,7 +10,7 @@ from .keyword_utils import (
 )
 from .target_resolver import TargetError, resolve_target
 
-from framework.pages.login_page import LoginPage
+from pages.login_page import LoginPage
 
 
 def __init__(self, driver):

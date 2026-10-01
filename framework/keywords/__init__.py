@@ -1,9 +1,9 @@
-from .keyword_registry import (
+from keyword_registry import (
     KeywordRegistry,
     build_default_registry,
 )
 
-from .keyword_utils import (
+from keyword_utils import (
     KeywordError,
     KeywordResult,
     VerificationFailed,

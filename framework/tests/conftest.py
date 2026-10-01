@@ -4,7 +4,7 @@ from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.edge.options import Options as EdgeOptions
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 
-from framework import config
+import config
 
 DEFAULT_BROWSER = getattr(
     config, "BROWSER", "chrome"

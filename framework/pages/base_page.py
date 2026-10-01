@@ -6,7 +6,7 @@ from pathlib import Path
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-from framework.utils.locator_reader import get_locator_reader
+from utils.locator_reader import get_locator_reader
 
 LOCATOR_FILE = (
     Path(__file__).resolve().parent.parent / "data" / "excel" / "locators.xlsx"

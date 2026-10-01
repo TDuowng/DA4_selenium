@@ -1,8 +1,8 @@
 from selenium.webdriver.common.by import By
 
 # pages/login_page.py
-from framework.config import DEFAULT_PASSWORD, DEFAULT_USERNAME, LOGIN_URL
-from framework.pages.base_page import BasePage
+from config import DEFAULT_PASSWORD, DEFAULT_USERNAME, LOGIN_URL
+from pages.base_page import BasePage
 
 
 class LoginPage(BasePage):

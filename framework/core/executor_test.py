@@ -1,7 +1,7 @@
 # TEST EXECUTOR: điều phối ở tầng TESTCASE - kiểm tra schema chung, thứ tự step,
 # case_id nhất quán, sau đó duyệt từng step và giao cho KeywordExecutor xử lý.
 
-from .keyword_executor import KeywordExecutor
+from keyword_executor import KeywordExecutor
 
 FIELDS = {"case_id", "step", "keyword", "target", "data", "expected"}
 
