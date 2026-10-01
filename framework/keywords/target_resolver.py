@@ -16,14 +16,14 @@ class TargetError(Exception):
     """
 
 
-_PAGE_TARGET_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+PAGE_TARGET_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
-_ELEMENT_TARGET_PATTERN = re.compile(
+ELEMENT_TARGET_PATTERN = re.compile(
     r"^([A-Za-z_][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)$"
 )
 
 
-def _get_driver(context: Any):
+def get_driver(context: Any):
     """
     Get WebDriver from keyword execution context.
 
@@ -61,7 +61,7 @@ def _get_driver(context: Any):
     return driver
 
 
-def _page_class_name(page_name: str) -> str:
+def page_class_name(page_name: str) -> str:
     """
     Convert Excel Page Object name to class name.
 
@@ -73,7 +73,7 @@ def _page_class_name(page_name: str) -> str:
     return page_name
 
 
-def _page_module_name(page_name: str) -> str:
+def page_module_name(page_name: str) -> str:
     """
     Convert Page Object class name to Python module name.
 
@@ -103,7 +103,7 @@ def _page_module_name(page_name: str) -> str:
     return f"pages.{snake_name}_page"
 
 
-def _load_page_class(page_name: str):
+def load_page_class(page_name: str):
     """
     Dynamically load Page Object class.
 
@@ -114,9 +114,9 @@ def _load_page_class(page_name: str):
         pages.login_page.LoginPage
     """
 
-    module_name = _page_module_name(page_name)
+    module_name = page_module_name(page_name)
 
-    class_name = _page_class_name(page_name)
+    class_name = page_class_name(page_name)
     try:
         module = importlib.import_module(module_name)
     except ModuleNotFoundError as exc:
@@ -178,7 +178,7 @@ def resolve_page(
             f"resolve_page() chỉ nhận Page Target."
         )
 
-    if not _PAGE_TARGET_PATTERN.fullmatch(target_name):
+    if not PAGE_TARGET_PATTERN.fullmatch(target_name):
         raise TargetError(f"Target Page không hợp lệ: " f"'{target_name}'.")
 
     if not target_name.endswith("Page"):
@@ -186,9 +186,9 @@ def resolve_page(
             f"Target '{target_name}' không phải " f"tên Page Object hợp lệ."
         )
 
-    driver = _get_driver(context)
+    driver = get_driver(context)
 
-    page_class = _load_page_class(target_name)
+    page_class = load_page_class(target_name)
 
     try:
         return page_class(driver)
@@ -223,7 +223,7 @@ def resolve_element(
     if not target_name:
         raise TargetError("Target không được để trống.")
 
-    match = _ELEMENT_TARGET_PATTERN.fullmatch(target_name)
+    match = ELEMENT_TARGET_PATTERN.fullmatch(target_name)
 
     if match is None:
         raise TargetError(
