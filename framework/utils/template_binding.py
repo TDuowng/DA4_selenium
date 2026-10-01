@@ -2,9 +2,11 @@
 # Chỉ hỗ trợ placeholder chiếm toàn ô như {username}; chưa có ngôn ngữ biểu thức.
 import re
 
-from keywords.keyword_registry import build_default_registry
-from keywords.keyword_spec import KEYWORD_SPEC, START_KEYWORDS
-from keywords.target_resolver import TargetError, load_page_class
+from framework.config import LOCATOR_FILE
+from framework.keywords.keyword_registry import build_default_registry
+from framework.keywords.keyword_spec import KEYWORD_SPEC, START_KEYWORDS
+from framework.keywords.target_resolver import TargetError, load_page_class
+from framework.utils.locator_reader import get_locator_reader
 
 REGISTRY = build_default_registry()
 
@@ -40,10 +42,16 @@ def _validate_target(where, keyword, target):
         page_class = load_page_class(page_name)  # chỉ import class, KHÔNG tạo driver
     except TargetError as exc:
         raise ValueError(f"{where}: {exc}") from None
-    if element_key is not None and element_key not in page_class.LOCATORS:
-        raise ValueError(
-            f"{where}: element {element_key!r} không có trong {page_name}.LOCATORS"
-        )
+    if element_key is not None:
+        if not getattr(page_class, "PAGE_NAME", ""):
+            raise ValueError(f"{where}: {page_name} chưa khai báo PAGE_NAME")
+        if not get_locator_reader(LOCATOR_FILE).has_locator(
+            page_class.PAGE_NAME, element_key
+        ):
+            raise ValueError(
+                f"{where}: element {element_key!r} chưa có trong locators.xlsx "
+                f"(Page={page_class.PAGE_NAME!r})"
+            )
 
 
 def _check_cells(where, keyword, row):

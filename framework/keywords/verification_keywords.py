@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from keywords.keyword_utils import (
+from .keyword_utils import (
     KeywordError,
     KeywordResult,
     VerificationFailed,
@@ -709,7 +709,7 @@ def verify_keyword(
 
     # Import lazily to avoid circular dependency
     # between Registry and Verification Library.
-    from keywords.keyword_registry import (
+    from .keyword_registry import (
         build_default_registry,
     )
 

@@ -1,7 +1,7 @@
 # TEST EXECUTOR: điều phối ở tầng TESTCASE - kiểm tra schema chung, thứ tự step,
 # case_id nhất quán, sau đó duyệt từng step và giao cho KeywordExecutor xử lý.
 
-from core.keyword_executor import KeywordExecutor
+from .keyword_executor import KeywordExecutor
 
 FIELDS = {"case_id", "step", "keyword", "target", "data", "expected"}
 
@@ -43,12 +43,16 @@ class TestExecutor:
 
         for row in steps:
             # In mã ca/bước để debug; không nuốt lỗi rồi báo PASS.
-            print(f"{row['case_id']} | step {row['step']} | {row['keyword']} | {row['target']}")
+            print(
+                f"{row['case_id']} | step {row['step']} | {row['keyword']} | {row['target']}"
+            )
             try:
                 self.keyword_executor.execute(row)
             except Exception as error:
                 # Bổ sung ngữ cảnh rồi ném lại cùng exception, giữ traceback gốc.
-                error.add_note(f"Case {row['case_id']}, step {row['step']}, keyword {row['keyword']}")
+                error.add_note(
+                    f"Case {row['case_id']}, step {row['step']}, keyword {row['keyword']}"
+                )
                 raise
 
         return "PASS"

@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from typing import Any, Callable
 
-from keywords.common_keywords import (
+from .common_keywords import (
     navigate,
     set_text,
     clear_text,
@@ -14,13 +14,13 @@ from keywords.common_keywords import (
     select_option,
 )
 
-from keywords.business_keywords import (
+from .business_keywords import (
     login,
     add_to_cart,
     set_product_out_of_stock,
 )
 
-from keywords.verification_keywords import (
+from .verification_keywords import (
     verify_url,
     verify_text,
     verify_text_contains,

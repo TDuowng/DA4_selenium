@@ -3,14 +3,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from keywords.keyword_utils import (
+from .keyword_utils import (
     KeywordError,
     KeywordResult,
     require_target,
 )
-from keywords.target_resolver import TargetError, resolve_target
+from .target_resolver import TargetError, resolve_target
 
-from pages.login_page import LoginPage
+from framework.pages.login_page import LoginPage
 
 
 def __init__(self, driver):

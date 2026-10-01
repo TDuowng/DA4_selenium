@@ -1,23 +1,55 @@
 import pytest
-from drivers.driver_manager import DriverManager
- 
- 
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options as ChromeOptions
+from selenium.webdriver.edge.options import Options as EdgeOptions
+from selenium.webdriver.firefox.options import Options as FirefoxOptions
+
+from framework import config
+
+DEFAULT_BROWSER = getattr(
+    config, "BROWSER", "chrome"
+)  # thêm BROWSER = "chrome" vào config.py
+
+
 def pytest_addoption(parser):
-    """Cho phép chọn browser/headless khi chạy: pytest --browser=firefox --headless"""
-    parser.addoption("--browser", action="store", default="chrome",
-                      help="chrome | firefox | edge")
-    parser.addoption("--headless", action="store_true", default=False,
-                      help="Chạy browser ở chế độ headless")
- 
- 
+    parser.addoption(
+        "--browser",
+        choices=["chrome", "firefox", "edge"],
+        default=None,
+        help=f"Trình duyệt (mặc định: {DEFAULT_BROWSER})",
+    )
+    parser.addoption(
+        "--headless", action="store_true", help="Chạy không giao diện (CI)"
+    )
+
+
 @pytest.fixture
 def driver(request):
-    browser = request.config.getoption("--browser")
+    name = request.config.getoption("--browser") or DEFAULT_BROWSER
     headless = request.config.getoption("--headless")
- 
-    manager = DriverManager(browser=browser, headless=headless)
-    drv = manager.start_driver()
- 
-    yield drv
- 
-    manager.quit_driver()
+
+    if name == "chrome":
+        options = ChromeOptions()
+        options.add_argument("--headless=new" if headless else "--start-maximized")
+        driver = webdriver.Chrome(options=options)
+    elif name == "edge":
+        options = EdgeOptions()
+        options.add_argument("--headless=new" if headless else "--start-maximized")
+        driver = webdriver.Edge(options=options)
+    else:
+        options = FirefoxOptions()
+        if headless:
+            options.add_argument("-headless")
+        driver = webdriver.Firefox(options=options)
+
+    if headless or name == "firefox":
+        driver.set_window_size(1920, 1080)  # headless không có "maximize"
+
+    yield driver
+    driver.quit()
+
+
+@pytest.fixture
+def context(driver):
+    # target_resolver._get_driver chấp nhận context["driver"] hoặc context.driver
+    return {"driver": driver}

@@ -1,23 +1,20 @@
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
 
-from config import LOGIN_URL, TIMEOUT
+# pages/login_page.py
+from framework.config import DEFAULT_PASSWORD, DEFAULT_USERNAME, LOGIN_URL
+from framework.pages.base_page import BasePage
 
 
-class LoginPage:
+class LoginPage(BasePage):
+    PAGE_NAME = "login"  # khớp cột Page trong locators.xlsx
+    URL = LOGIN_URL["login"]
 
-    LOCATORS = {
-        "login.username": (By.ID, "userName"),
-        "login.password": (By.ID, "password"),
-        "login.loginButton": (By.CSS_SELECTOR, "button[type='submit']"),
-        "login.userNameLabel": (By.ID, "userName-value"),
-        "login.errorMessage": (By.CSS_SELECTOR, "#flash.error"),
-    }
-
-    def __init__(self, driver):
-        self.driver = driver
-        self.wait = WebDriverWait(driver, TIMEOUT)
-
-    def open(self):
-        self.driver.get(LOGIN_URL["login"])
+    def login(self, username: str | None = None, password: str | None = None):
+        self.open()
+        self.enter_text(
+            "username", username if username is not None else DEFAULT_USERNAME
+        )
+        self.enter_text(
+            "password", password if password is not None else DEFAULT_PASSWORD
+        )
+        self.click("loginButton")

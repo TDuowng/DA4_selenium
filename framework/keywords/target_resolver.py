@@ -6,7 +6,7 @@ import importlib
 import re
 from typing import Any
 
-from pages.base_page import BasePage
+from framework.pages.base_page import BasePage
 
 
 class TargetError(Exception):

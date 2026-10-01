@@ -3,11 +3,11 @@
 # KHÔNG biết gì về testcase, thứ tự step, hay case_id -> đó là việc của TestExecutor.
 
 import math
-from keywords.common_keywords import CommonKeywords
-from keywords.business_keywords import LoginKeywords
-from keywords.verification_keywords import VerificationKeywords
-from keywords.keyword_registry import registry
-from config import URLS
+from ..keywords.common_keywords import CommonKeywords
+from framework.keywords.business_keywords import LoginKeywords
+from framework.keywords.verification_keywords import VerificationKeywords
+from framework.keywords.keyword_registry import registry
+from framework.config import URLS
 
 
 class KeywordExecutor:

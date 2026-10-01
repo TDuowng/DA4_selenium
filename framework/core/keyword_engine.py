@@ -1,4 +1,4 @@
-from keywords.keyword_registry import build_default_registry
+from framework.keywords.keyword_registry import build_default_registry
 from selenium.common.exceptions import TimeoutException
 
 

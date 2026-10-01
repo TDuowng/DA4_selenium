@@ -1,13 +1,16 @@
+# Đọc locator từ locators.xlsx. Mỗi sheet = 1 website/nhóm trang, cột: Page | Element | Type | Value.
+# Toàn bộ sheet được nạp 1 lần và kiểm tra ngay (trước khi mở browser).
+# Tên Page/Element KHÔNG phân biệt hoa thường ("LoginPage.Username" khớp "username").
+# Tên Page phải duy nhất trên TẤT CẢ sheet (trùng sẽ báo lỗi).
 from pathlib import Path
 
+from openpyxl import load_workbook
 from selenium.webdriver.common.by import By
 
-from utils.excel_reader import ExcelReader
+REQUIRED_COLUMNS = ("Page", "Element", "Type", "Value")
 
 
 class LocatorReader:
-    """Read UI locators from Excel."""
-
     LOCATOR_TYPES = {
         "ID": By.ID,
         "NAME": By.NAME,
@@ -19,75 +22,81 @@ class LocatorReader:
         "XPATH": By.XPATH,
     }
 
-    def __init__(self, file_path: str):
+    def __init__(self, file_path):
         self.file_path = Path(file_path)
-        self.reader = ExcelReader(file_path)
         self._locators: dict[tuple[str, str], tuple[str, str]] = {}
+        self._source: dict[tuple[str, str], str] = (
+            {}
+        )  # key -> tên sheet, để báo lỗi trùng
 
-    def load_sheet(self, sheet_name: str) -> None:
-        rows = self.reader.read_sheet(sheet_name)
+    def load_all(self) -> "LocatorReader":
+        workbook = load_workbook(self.file_path, read_only=True, data_only=True)
+        try:
+            for sheet in workbook.worksheets:
+                self._load_sheet(sheet.title, sheet.iter_rows(values_only=True))
+        finally:
+            workbook.close()
+        if not self._locators:
+            raise ValueError(f"{self.file_path.name}: không có locator nào")
+        return self
 
-        for row in rows:
-            page = self._normalize_name(row.get("Page"))
-            element = self._normalize_name(row.get("Element"))
-            locator_type = self._normalize_type(row.get("Type"))
-            value = row.get("Value")
+    def _load_sheet(self, sheet_name, rows):
+        rows = iter(rows)
+        header = next(rows, None)
+        if header is None:
+            raise ValueError(f"Sheet '{sheet_name}': trống")
+        columns = {str(h).strip(): i for i, h in enumerate(header) if h is not None}
+        missing = [c for c in REQUIRED_COLUMNS if c not in columns]
+        if missing:
+            raise ValueError(f"Sheet '{sheet_name}': thiếu cột {missing}")
 
-            if not page:
-                raise ValueError("Locator Page cannot be empty.")
+        for line, row in enumerate(rows, start=2):
+            if all(c is None or str(c).strip() == "" for c in row):
+                continue  # bỏ dòng trống hoàn toàn
+            get = lambda name: row[columns[name]] if columns[name] < len(row) else None
+            page, element = self._norm(get("Page")), self._norm(get("Element"))
+            locator_type = str(get("Type") or "").strip().upper()
+            value = "" if get("Value") is None else str(get("Value")).strip()
+            where = f"Sheet '{sheet_name}' dòng {line}"
 
-            if not element:
-                raise ValueError("Locator Element cannot be empty.")
-
+            if not page or not element:
+                raise ValueError(f"{where}: Page/Element không được trống")
             if locator_type not in self.LOCATOR_TYPES:
                 raise ValueError(
-                    f"Unsupported locator type "
-                    f"'{locator_type}' for "
-                    f"{page}.{element}."
+                    f"{where}: Type '{locator_type}' không hỗ trợ ({page}.{element})"
                 )
-
-            if value is None or str(value).strip() == "":
-                raise ValueError(
-                    f"Locator Value cannot be empty for " f"{page}.{element}."
-                )
+            if not value:
+                raise ValueError(f"{where}: Value trống ({page}.{element})")
 
             key = (page, element)
-
             if key in self._locators:
-                raise ValueError(f"Duplicate locator: {page}.{element}")
+                raise ValueError(
+                    f"{where}: trùng locator {page}.{element} "
+                    f"(đã có ở sheet '{self._source[key]}')"
+                )
+            self._locators[key] = (self.LOCATOR_TYPES[locator_type], value)
+            self._source[key] = sheet_name
 
-            self._locators[key] = (self.LOCATOR_TYPES[locator_type], str(value).strip())
+    def has_locator(self, page, element) -> bool:
+        return (self._norm(page), self._norm(element)) in self._locators
 
-    def get_locator(self, page: str, element: str) -> tuple[str, str]:
-        key = (self._normalize_name(page), self._normalize_name(element))
-
+    def get_locator(self, page, element) -> tuple[str, str]:
+        key = (self._norm(page), self._norm(element))
         if key not in self._locators:
             raise KeyError(f"Locator not found: {page}.{element}")
-
         return self._locators[key]
 
     @staticmethod
-    def _normalize_name(value) -> str:
-        if value is None:
-            return ""
-
-        return str(value).strip().lower()
-
-    @staticmethod
-    def _normalize_type(value) -> str:
-        if value is None:
-            return ""
-
-        return str(value).strip().upper()
+    def _norm(value) -> str:
+        return "" if value is None else str(value).strip().lower()
 
 
-_READER: "LocatorReader | None" = None
+_READERS: dict[str, LocatorReader] = {}
 
 
-def get_locator_reader(file_path: str, sheet_name: str = "Locators") -> LocatorReader:
-    """Tạo 1 lần, dùng lại cho mọi page."""
-    global _READER
-    if _READER is None:
-        _READER = LocatorReader(file_path)
-        _READER.load_sheet(sheet_name)
-    return _READER
+def get_locator_reader(file_path) -> LocatorReader:
+    """Nạp 1 lần cho mỗi file, dùng lại cho mọi page."""
+    key = str(Path(file_path).resolve())
+    if key not in _READERS:
+        _READERS[key] = LocatorReader(key).load_all()
+    return _READERS[key]

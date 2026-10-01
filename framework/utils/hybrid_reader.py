@@ -3,7 +3,11 @@
 # Không sort để che lỗi thứ tự step, không return [] để biến lỗi thành skip.
 import pandas as pd
 
-from utils.template_binding import TEMPLATE_FIELDS, bind_template, validate_template
+from framework.utils.template_binding import (
+    TEMPLATE_FIELDS,
+    bind_template,
+    validate_template,
+)
 
 STEPS_SHEET = "test_steps"
 CASES_SHEET = "test_case"

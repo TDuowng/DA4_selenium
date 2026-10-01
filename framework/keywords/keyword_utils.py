@@ -63,13 +63,12 @@ class KeywordResult:
 # Validation helpers
 # ---------------------------------------------------------------------------
 
+
 def is_blank(value: Any) -> bool:
     """
     Return True when value is None or contains only whitespace.
     """
-    return value is None or (
-        isinstance(value, str) and not value.strip()
-    )
+    return value is None or (isinstance(value, str) and not value.strip())
 
 
 def to_text(value: Any) -> str:
@@ -103,9 +102,7 @@ def require_target(
     Validate and return Target as text.
     """
     if is_blank(target):
-        raise KeywordError(
-            f"{keyword}: Target không được để trống."
-        )
+        raise KeywordError(f"{keyword}: Target không được để trống.")
 
     return to_text(target)
 
@@ -121,14 +118,10 @@ def require_data(
     therefore only None is considered missing here.
     """
     if data is None:
-        raise KeywordError(
-            f"{keyword}: Data không được để trống."
-        )
+        raise KeywordError(f"{keyword}: Data không được để trống.")
 
     if isinstance(data, str) and not data.strip():
-        raise KeywordError(
-            f"{keyword}: Data không được để trống."
-        )
+        raise KeywordError(f"{keyword}: Data không được để trống.")
 
     return data
 
@@ -141,9 +134,7 @@ def require_expected(
     Validate Expected value for verification keywords.
     """
     if is_blank(expected):
-        raise KeywordError(
-            f"{keyword}: Expected không được để trống."
-        )
+        raise KeywordError(f"{keyword}: Expected không được để trống.")
 
     return to_text(expected)
 
@@ -152,6 +143,7 @@ def require_expected(
 # Target helpers
 # ---------------------------------------------------------------------------
 
+
 def resolve_page(
     target: Any,
     context: Any,
@@ -159,7 +151,7 @@ def resolve_page(
     """
     Resolve Target and require it to be a Page Object.
     """
-    from keywords.target_resolver import (
+    from .target_resolver import (
         TargetError,
         resolve_target,
     )
@@ -175,14 +167,11 @@ def resolve_page(
             context,
         )
     except (TargetError, KeyError) as exc:
-        raise KeywordError(
-            f"Không thể resolve Page '{target_name}': {exc}"
-        ) from exc
+        raise KeywordError(f"Không thể resolve Page '{target_name}': {exc}") from exc
 
     if element_key is not None:
         raise KeywordError(
-            f"Target phải là Page Object, "
-            f"không phải element: '{target_name}'"
+            f"Target phải là Page Object, " f"không phải element: '{target_name}'"
         )
 
     return page
@@ -196,7 +185,7 @@ def resolve_element(
     Resolve Target and require it to be an element
     belonging to a Page Object.
     """
-    from keywords.target_resolver import (
+    from .target_resolver import (
         TargetError,
         resolve_target,
     )
@@ -212,14 +201,11 @@ def resolve_element(
             context,
         )
     except (TargetError, KeyError) as exc:
-        raise KeywordError(
-            f"Không thể resolve Element '{target_name}': {exc}"
-        ) from exc
+        raise KeywordError(f"Không thể resolve Element '{target_name}': {exc}") from exc
 
     if element_key is None:
         raise KeywordError(
-            f"Target phải là Element, "
-            f"không phải Page Object: '{target_name}'"
+            f"Target phải là Element, " f"không phải Page Object: '{target_name}'"
         )
 
     return page, element_key
@@ -228,6 +214,7 @@ def resolve_element(
 # ---------------------------------------------------------------------------
 # Wait / polling helpers
 # ---------------------------------------------------------------------------
+
 
 def page_timeout(
     page: Any,
@@ -305,9 +292,7 @@ def poll(
         if remaining <= 0:
             break
 
-        threading.Event().wait(
-            min(interval, remaining)
-        )
+        threading.Event().wait(min(interval, remaining))
 
     if last_exception is not None:
         raise last_exception
@@ -325,17 +310,14 @@ def fail(
     """
     raise VerificationFailed(
         f"{keyword}: {message}"
-        + (
-            f" | Actual={actual!r}"
-            if actual is not None
-            else ""
-        )
+        + (f" | Actual={actual!r}" if actual is not None else "")
     )
 
 
 # ---------------------------------------------------------------------------
 # Calculation helpers
 # ---------------------------------------------------------------------------
+
 
 def parse_number(
     value: Any,
@@ -352,9 +334,7 @@ def parse_number(
     """
 
     if isinstance(value, bool):
-        raise ValueError(
-            f"Boolean is not a valid number: {value!r}"
-        )
+        raise ValueError(f"Boolean is not a valid number: {value!r}")
 
     if isinstance(value, (int, float)):
         return float(value)
@@ -362,9 +342,7 @@ def parse_number(
     text = to_text(value)
 
     if not text:
-        raise ValueError(
-            "Cannot parse blank value as number."
-        )
+        raise ValueError("Cannot parse blank value as number.")
 
     text = (
         text.replace(",", "")
@@ -407,9 +385,7 @@ def safe_eval(
     """
 
     if is_blank(expression):
-        raise ValueError(
-            "Calculation expression cannot be blank."
-        )
+        raise ValueError("Calculation expression cannot be blank.")
 
     tree = ast.parse(
         str(expression),
@@ -430,48 +406,29 @@ def safe_eval(
             ):
                 return float(node.value)
 
-            raise ValueError(
-                "Only numeric constants are allowed."
-            )
+            raise ValueError("Only numeric constants are allowed.")
 
         if isinstance(node, ast.BinOp):
-            operation = _ALLOWED_OPERATORS.get(
-                type(node.op)
-            )
+            operation = _ALLOWED_OPERATORS.get(type(node.op))
 
             if operation is None:
-                raise ValueError(
-                    f"Unsupported operator: "
-                    f"{type(node.op).__name__}"
-                )
+                raise ValueError(f"Unsupported operator: " f"{type(node.op).__name__}")
 
             left = evaluate(node.left)
             right = evaluate(node.right)
 
-            return float(
-                operation(left, right)
-            )
+            return float(operation(left, right))
 
         if isinstance(node, ast.UnaryOp):
-            operation = _ALLOWED_OPERATORS.get(
-                type(node.op)
-            )
+            operation = _ALLOWED_OPERATORS.get(type(node.op))
 
             if operation is None:
                 raise ValueError(
-                    f"Unsupported unary operator: "
-                    f"{type(node.op).__name__}"
+                    f"Unsupported unary operator: " f"{type(node.op).__name__}"
                 )
 
-            return float(
-                operation(
-                    evaluate(node.operand)
-                )
-            )
+            return float(operation(evaluate(node.operand)))
 
-        raise ValueError(
-            f"Unsupported expression node: "
-            f"{type(node).__name__}"
-        )
+        raise ValueError(f"Unsupported expression node: " f"{type(node).__name__}")
 
     return evaluate(tree)

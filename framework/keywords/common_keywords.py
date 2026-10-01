@@ -4,14 +4,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from keywords.keyword_utils import (
+from .keyword_utils import (
     KeywordError,
     KeywordResult,
     require_data,
     require_target,
 )
 
-from keywords.target_resolver import (
+from .target_resolver import (
     TargetError,
     resolve_target,
 )
