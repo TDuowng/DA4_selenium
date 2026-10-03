@@ -70,7 +70,15 @@ def page_class_name(page_name: str) -> str:
         ProductPage -> ProductPage
     """
 
-    return page_name
+    if page_name.endswith("Page"):
+        return page_name
+
+    pascal_name = re.sub(
+        r"(?:^|_)([a-zA-Z0-9])",
+        lambda match: match.group(1).upper(),
+        page_name,
+    )
+    return f"{pascal_name}Page"
 
 
 def page_module_name(page_name: str) -> str:
@@ -83,12 +91,7 @@ def page_module_name(page_name: str) -> str:
         HomePage    -> pages.home_page
     """
 
-    if not page_name.endswith("Page"):
-        raise TargetError(
-            f"Target '{page_name}' phải là tên Page Object " f"có hậu tố 'Page'."
-        )
-
-    name = page_name[:-4]
+    name = page_class_name(page_name)[:-4]
 
     if not name:
         raise TargetError(f"Target Page không hợp lệ: '{page_name}'.")
@@ -181,11 +184,6 @@ def resolve_page(
     if not PAGE_TARGET_PATTERN.fullmatch(target_name):
         raise TargetError(f"Target Page không hợp lệ: " f"'{target_name}'.")
 
-    if not target_name.endswith("Page"):
-        raise TargetError(
-            f"Target '{target_name}' không phải " f"tên Page Object hợp lệ."
-        )
-
     driver = get_driver(context)
 
     page_class = load_page_class(target_name)
@@ -241,7 +239,7 @@ def resolve_element(
     )
 
     try:
-        page.get_locator(element_key)
+        page.locator(element_key)
     except KeyError as exc:
         raise TargetError(
             f"Element '{element_key}' không tồn tại " f"trong {page_name}.LOCATORS."

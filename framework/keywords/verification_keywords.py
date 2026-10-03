@@ -18,6 +18,7 @@ from .keyword_utils import (
     resolve_page,
     safe_eval,
 )
+from .target_resolver import get_driver
 
 
 def verify_url(
@@ -30,7 +31,7 @@ def verify_url(
     Keyword: VerifyUrl
 
     Target:
-        Page Object.
+        Not used.
 
     Data:
         Not used.
@@ -42,28 +43,20 @@ def verify_url(
         Verify current URL contains Expected.
     """
 
-    target_name = require_target(
-        "VerifyUrl",
-        target,
-    )
-
     expected_value = require_expected(
         "VerifyUrl",
         expected,
     )
 
-    page = resolve_page(
-        target_name,
-        context,
-    )
+    driver = get_driver(context)
 
     timeout = page_timeout(
-        page,
+        driver,
         context,
     )
 
     def check_url():
-        actual_url = page.get_current_url()
+        actual_url = driver.current_url
 
         return actual_url if expected_value in actual_url else False
 
@@ -73,7 +66,7 @@ def verify_url(
     )
 
     if not actual_url:
-        actual_url = page.get_current_url()
+        actual_url = driver.current_url
 
         fail(
             "VerifyUrl",
@@ -262,6 +255,10 @@ def verify_field_state(
 
         if expected_state == "disabled":
             return not page.is_enabled(element_key)
+
+        if expected_state in {"valid", "invalid"}:
+            is_valid = page.is_valid(element_key)
+            return is_valid if expected_state == "valid" else not is_valid
 
         if expected_state == "selected":
             return page.is_selected(element_key)

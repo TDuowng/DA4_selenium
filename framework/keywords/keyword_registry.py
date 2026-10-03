@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 
-import re
 from typing import Any, Callable
 
 from .common_keywords import (
@@ -70,9 +69,6 @@ LIFECYCLE_KEYWORDS = {
 }
 
 
-_PASCAL_CASE = re.compile(r"^[A-Z][A-Za-z0-9]*$")
-
-
 KEYWORD_MAP: dict[str, KeywordHandler] = {
     # Common Keywords
     "Navigate": navigate,
@@ -114,7 +110,7 @@ class KeywordRegistry:
             dict(keyword_map) if keyword_map is not None else dict(KEYWORD_MAP)
         )
 
-    def resolve(self, keyword: str) -> KeywordHandler:
+    def canonical_name(self, keyword: str) -> str:
         if not isinstance(keyword, str):
             raise TypeError("Keyword must be a string")
 
@@ -123,25 +119,28 @@ class KeywordRegistry:
         if not name:
             raise KeyError("Keyword cannot be blank")
 
-        if not _PASCAL_CASE.fullmatch(name):
-            raise KeyError(
-                f"Invalid keyword format: '{name}'. " "Keyword must use PascalCase."
-            )
+        for registered_name in self._keyword_map:
+            if name.casefold() == registered_name.casefold():
+                return registered_name
 
-        try:
-            return self._keyword_map[name]
-        except KeyError as exc:
-            raise KeyError(f"Keyword is not registered: '{name}'") from exc
+        raise KeyError(f"Keyword is not registered: '{name}'")
+
+    def resolve(self, keyword: str) -> KeywordHandler:
+        return self._keyword_map[self.canonical_name(keyword)]
 
     def is_registered(self, keyword: str) -> bool:
-        return keyword in self._keyword_map
+        try:
+            self.canonical_name(keyword)
+            return True
+        except (KeyError, TypeError):
+            return False
 
     @property
     def names(self) -> tuple[str, ...]:
         return tuple(self._keyword_map.keys())
 
     def __contains__(self, keyword: str) -> bool:
-        return keyword in self._keyword_map
+        return self.is_registered(keyword)
 
     def __len__(self) -> int:
         return len(self._keyword_map)

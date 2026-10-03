@@ -26,23 +26,23 @@ def navigate(
     """
     Keyword: Navigate
     Target:
-        Page Object name.
-    Data:
         Not used.
+    Data:
+        Page Object alias or name.
     Expected:
         Not used.
     Example:
-        Navigate | LoginPage
+        Navigate | [blank] | login
     """
 
-    target_name = require_target(
+    page_name = require_data(
         "Navigate",
-        target,
+        data,
     )
 
     try:
         page, element_key = resolve_target(
-            target_name,
+            page_name,
             context,
         )
 
@@ -51,13 +51,12 @@ def navigate(
 
     if element_key is not None:
         raise KeywordError(
-            f"Navigate chỉ nhận Target là tên Page, "
-            f"không phải element: '{target_name}'"
+            f"Navigate chỉ nhận Data là tên Page, " f"không phải element: '{page_name}'"
         )
 
     page.open()
 
-    return KeywordResult.ok(f"Navigated to {target_name}")
+    return KeywordResult.ok(f"Navigated to {page_name}")
 
 
 def set_text(

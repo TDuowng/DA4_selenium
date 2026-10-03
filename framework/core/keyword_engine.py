@@ -1,23 +1,10 @@
-from keywords.keyword_registry import build_default_registry
+from typing import Any
 
-from selenium.common.exceptions import TimeoutException
+from .executor_test import TestExecutor
 
 
-class KeywordEngine:
-    """Chỉ THỰC THI các bước đã validate + bind. Không đọc Excel, không thay placeholder."""
+class KeywordEngine(TestExecutor):
+    """Compatibility facade for the TestExecutor pipeline."""
 
-    def __init__(self, driver, registry=None):
-        self.driver = driver
-        self.registry = registry or build_default_registry()
-
-    def run(self, steps):
-        for s in steps:
-            handler = self.registry.resolve(s["keyword"])
-            try:
-                handler(
-                    self.driver, s["target"], s["data"], s["expected"]
-                )  # thứ tự tham số: GIẢ ĐỊNH
-            except (AssertionError, TimeoutException) as e:
-                raise AssertionError(
-                    f"[{s['case_id']}] step {s['step']} ({s['keyword']}) lỗi: {e}"
-                ) from None
+    def __init__(self, context: Any, registry=None):
+        super().__init__(context, registry)

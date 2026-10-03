@@ -88,7 +88,7 @@ def validate_template(template):
 
         keyword = row["keyword"]
         try:
-            REGISTRY.resolve(keyword)  # đúng PascalCase + đã đăng ký
+            keyword = REGISTRY.canonical_name(keyword)
         except (KeyError, TypeError) as exc:
             raise ValueError(f"{where}: {exc.args[0] if exc.args else exc}") from None
         _validate_target(where, keyword, row["target"])
@@ -99,11 +99,14 @@ def validate_template(template):
                 raise ValueError(f"{where}: placeholder phải chiếm toàn ô: {value!r}")
         _check_cells(where, keyword, row)
 
-    if template[0]["keyword"] not in START_KEYWORDS:
+    first_keyword = REGISTRY.canonical_name(template[0]["keyword"])
+    if first_keyword not in START_KEYWORDS:
         raise ValueError(
             f"Template {template_id!r} phải bắt đầu bằng một trong {sorted(START_KEYWORDS)}"
         )
-    if not any(r["keyword"].startswith("Verify") for r in template):
+    if not any(
+        REGISTRY.canonical_name(r["keyword"]).startswith("Verify") for r in template
+    ):
         raise ValueError(f"Template {template_id!r} phải có ít nhất một Verify")
     return template
 
@@ -122,6 +125,7 @@ def bind_template(template, case):
     steps = []
     for template_row in template:
         row = {k: v for k, v in template_row.items() if k != "template_id"}
+        row["keyword"] = REGISTRY.canonical_name(row["keyword"])
         row["case_id"] = case["case_id"]
         for field in ("data", "expected"):
             match = PLACEHOLDER.fullmatch(row[field])
@@ -131,6 +135,9 @@ def bind_template(template, case):
                     raise ValueError(
                         f"Case {case['case_id']}: thiếu cột {key!r} trong test_case"
                     )
-                row[field] = case[key]
+                value = case[key]
+                if field == "data" and row["keyword"] == "SetText" and not value:
+                    value = "<empty>"
+                row[field] = value
         steps.append(row)
     return validate_steps(steps)

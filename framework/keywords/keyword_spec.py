@@ -20,10 +20,10 @@ class Spec:
 
 
 KEYWORD_SPEC = {
-    "Navigate": Spec(target="page", data="forbidden", expected="forbidden"),
+    "Navigate": Spec(target="none", data="required", expected="forbidden"),
     "SetText": Spec(target="element", data="required"),  # rỗng thì ghi <empty>
     "ClickElement": Spec(target="element"),
-    "VerifyUrl": Spec(expected="required"),
+    "VerifyUrl": Spec(target="none", expected="required"),
     "VerifyText": Spec(target="element", expected="required"),
     "VerifyFieldState": Spec(target="element", expected="required"),
     "VerifyAttribute": Spec(target="element", data="required"),  # data = tên attribute

@@ -10,7 +10,18 @@ from .keyword_utils import (
 )
 from .target_resolver import TargetError, resolve_target
 
+from pages.base_page import BasePage
 from pages.login_page import LoginPage
+
+
+def _run_page_action(page: BasePage, action_name: str, keyword_name: str) -> None:
+    action = getattr(page, action_name, None)
+    if not callable(action):
+        raise KeywordError(
+            f"{keyword_name}: {type(page).__name__} "
+            f"chưa triển khai {action_name}()."
+        )
+    action()
 
 
 def __init__(self, driver):
@@ -57,7 +68,7 @@ def login(
     if element_key is not None:
         raise KeywordError(f"Login chỉ nhận Target là Page: '{target_name}'")
 
-    page.login()
+    _run_page_action(page, "login", "Login")
 
     return KeywordResult.ok(f"Login executed on {target_name}")
 
@@ -90,7 +101,7 @@ def add_to_cart(
     if element_key is not None:
         raise KeywordError(f"AddToCart chỉ nhận Target là Page: '{target_name}'")
 
-    page.add_to_cart()
+    _run_page_action(page, "add_to_cart", "AddToCart")
 
     return KeywordResult.ok(f"Added product to cart using {target_name}")
 
@@ -128,6 +139,6 @@ def set_product_out_of_stock(
             "SetProductOutOfStock chỉ nhận Target là Page: " f"'{target_name}'"
         )
 
-    page.set_product_out_of_stock()
+    _run_page_action(page, "set_product_out_of_stock", "SetProductOutOfStock")
 
     return KeywordResult.ok(f"Product set out of stock using {target_name}")
