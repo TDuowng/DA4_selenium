@@ -2,268 +2,183 @@
 
 ## 1. Mục đích
 
-Core modules là các module điều phối quá trình thực thi test của framework.
+Core Layer điều phối việc chạy test. Core không chứa locator website và không chứa test flow riêng của từng chức năng.
 
-Core chịu trách nhiệm:
-- Quản lý WebDriver
-- Đọc và điều phối testcase
-- Thực thi keyword
-- Quản lý context của một testcase
-- Kết nối Keyword Library với Page Object Model
-- Điều phối luồng thực thi từ testcase đến trình duyệt
+```text
+Excel Test Case
+      ↓
+TestExecutor
+      ↓
+KeywordExecutor
+      ↓
+KeywordRegistry.resolve()
+      ↓
+Keyword Implementation
+      ↓
+Page Object / BasePage
+      ↓
+LOCATORS
+      ↓
+Selenium WebDriver
+```
 
-Core không chứa locator cụ thể của từng trang web.
-Locator và thao tác trên từng trang được quản lý bởi Page Object Model.
-
----
+Browser lifecycle nằm ngoài Excel và do `DriverManager`/pytest fixture quản lý.
 
 ## 2. Các Core Modules
 
-Framework gồm các core modules chính:
+| Module | Trách nhiệm |
+|---|---|
+| `DriverManager` | Khởi tạo, cấu hình và cleanup WebDriver |
+| `TestExecutor` | Đọc một TestCase và điều phối step theo thứ tự |
+| `KeywordExecutor` | Thực thi từng step thông qua Registry |
+| `TestContext` | Lưu driver và runtime context của test case |
 
-    Driver Manager `core/driver_manager.py`-> Khởi tạo, quản lý và đóng WebDriver 
-
-    Test Executor `core/test_executor.py` -> Điều phối quá trình thực thi, chạy từng step test case
-
-    Keyword Executor `core/keyword_executor.py` Nhận keyword và thực thi keyword tương ứng
-
-    Test Context `core/test_context.py` -> Lưu trữ driver, testcase ID, status, data,... trong quá trình test
-
----
+Không có nhánh `Test Layer → Page Object` trực tiếp.
 
 ## 3. Driver Manager
 
 ### File
 
-`core/driver_manager.py`
-
-### Mục đích
-
-Driver Manager chịu trách nhiệm quản lý Selenium WebDriver.
+```text
+core/driver_manager.py
+```
 
 ### Chức năng
 
-- Khởi tạo browser
-- Cấu hình browser
-- Trả về WebDriver hiện tại
-- Đóng browser
-- Quản lý vòng đời của WebDriver
+- Tạo Chrome WebDriver.
+- Áp dụng browser configuration.
+- Cấu hình timeout chung.
+- Cung cấp driver cho pytest fixture/Core.
+- Cleanup sau test.
 
-### Input
-
-- Browser name
-- Các cấu hình browser nếu có
-
-### Output
-
-- Một Selenium WebDriver instance
-
-Test Executor
-    ↓
-Driver Manager
-    ↓
-Selenium WebDriver
-    ↓
-Browser
-
+`OpenBrowser` và `CloseBrowser` không xuất hiện trong Excel test step.
 
 ## 4. Test Executor
 
 ### File
 
-`core/test_excutor.py`
-
-### Mục đích
-
-Là module điều phối quá trình thực thi test case.
-
-### Chức năng
-
-- Nhận test case từ dữ liệu đầu vào
-- Duyệt từng test step
-- Gửi step tới Keyword Executor
-- Truyền keyword, target, data và expected value
-- Xử lý kết quả thực thi
+```text
+core/test_executor.py
+```
 
 ### Input
 
-- Một test case gồm nhiều step:
+Các step được đọc từ Excel:
 
-Step 1:
-Keyword = OPEN_BROWSER
+```text
+TestCaseID | Step | Keyword | Target | Data | Expected
+```
 
-Step 2:
-Keyword = NAVIGATE
-Data = https://example.com
+### Xử lý
 
-Step 3:
-Keyword = ENTER_TEXT
-Target = LoginPage.username
-Data = admin
-
-Step 4:
-Keyword = CLICK
-Target = LoginPage.login_button
-
-### Output
-
-- Kết quả thực thi test case: PASS/FAIL
+1. Lấy các step cùng `TestCaseID`.
+2. Sắp xếp theo `Step`.
+3. Tạo/nhận `TestContext`.
+4. Gọi `KeywordExecutor` cho từng step.
+5. Ghi nhận kết quả và lỗi.
 
 ## 5. Keyword Executor
 
 ### File
 
-`core/keyword_executor.py`
+```text
+core/keyword_executor.py
+```
 
-### Mục đích
+### Interface
 
-Keyword Executor chịu trách nhiệm nhận một keyword từ test case và tìm cách thực thi keyword đó.
+```python
+execute(keyword, target, data, expected, context)
+```
 
-### Chức năng
+Executor không truy cập trực tiếp dictionary keyword. Nó gọi:
 
-- Nhận tên keyword
-- Nhận target
-- Nhận test data
-- Nhận expected value
-- Tìm keyword tương ứng trong Keyword Library
-- Gọi keyword để thực thi
-- Trả về kết quả thực thi
+```python
+handler = registry.resolve(keyword)
+```
 
-### Input
-
-- Keyword
-- Target
-- Data
-- Expected
-
-Ví dụ:
-Keyword = ENTER_TEXT
-Target = LoginPage.username
-Data = admin
-
-### Output
-
-Kết quả thực thi: PASS/FAIL
-
-### Quan hệ
-Test Executor
-    ↓
-Keyword Executor
-    ↓
-Keyword Registry
-    ↓
-Keyword Library
-    ↓
-POM
-    ↓
-Selenium WebDriver
+sau đó thực thi handler theo contract của keyword.
 
 ## 6. Test Context
 
 ### File
 
-`core/test_context.py`
+```text
+core/test_context.py
+```
 
-### Mục đích
+Có thể chứa:
 
-Lưu trữ thông tin và trạng thái trong quá trình thực thi một test case.
+- `driver`
+- page-object cache
+- execution metadata
+- runtime variables nếu framework cần
 
-### Có thể lưu trữ
+## 7. Luồng xử lý chính
 
-- WebDriver instance
-- Test case ID
-- Test data
-- Current page
-- Execution status
-- Các dữ liệu cần chia sẻ giữa các keyword
-
-Ví dụ
-TestContext:
-
-test_case_id = TC_LOGIN_01
-browser = Chrome
-driver = WebDriver instance
-status = RUNNING
-
-### Quan hệ
-
-Test Executor
-    ↓
-Test Context
-    ↑
-Keyword Executor
-
-## 7. Quan hệ giữa các Core modules
-
-### Luồng xử lý chính:
-
-Excel
-    ↓
-Excel Reader
-    ↓
-Test Executor
-    ↓
-Keyword Executor
-    ↓
-Keyword Registry
-    ↓
-Keyword Library
-    ↓
-POM
-    ↓
-Selenium WebDriver
-    ↓
-Web Application
-
-### Test Context được sử dụng trong quá trình thực thi
-
-              Test Context
-             ↗            ↖
-Test Executor              Keyword Executor
-      ↓                          ↓
-      └──────── Execution ───────┘
+```text
+pytest fixture
+     ↓
+DriverManager
+     ↓
+TestContext
+     ↓
+TestExecutor
+     ↓
+KeywordExecutor
+     ↓
+KeywordRegistry.resolve()
+     ↓
+Keyword handler
+     ↓
+Page Object / BasePage
+     ↓
+Selenium
+```
 
 ## 8. Giới hạn
 
-Thành phần                  Chịu trách nhiệm                Không chịu trách nhiệm
-___________________________________________________________________________________
-Driver Manager              Quản lý WebDriver               Xử lý Testcase
-Test Executor               Điều phối testcase              Thực hiện locator
-Keyword Executor            Điều phối keyword               Chứa locator
-Test Context                Lưu trạng thái test             Thực hiện thao tác UI
-Keyword Library             Cung cấp các keyword            Quản lý test flow
-POM                         Quản lý page/locator            Đọc excel
-Excel Reader                Đọc test data                   Điều khiển browser
+Core không:
+
+- Chứa XPath/CSS/ID.
+- Đọc locator trực tiếp từ Excel.
+- Gọi Page Object trực tiếp từ Test Layer.
+- Quản lý browser lifecycle bằng Excel keyword.
+- Chứa business flow riêng của từng test case.
 
 ## 9. Nguyên tắc thiết kế
 
-- Mỗi module chỉ chịu trách nhiệm cho 1 nhóm chức năng
-- Keyword không chứa locator
-- Core modules phải có khả năng sử dụng lại cho nhiều web application
-- Các modulel giao tiếp thông qua interface rõ ràng
+1. Một test case được điều phối bởi `TestExecutor`.
+2. Một step được thực thi qua `KeywordExecutor`.
+3. Keyword được resolve bằng `KeywordRegistry.resolve()`.
+4. Browser do `DriverManager`/pytest fixture quản lý.
+5. Locator thuộc Page Object.
+6. Excel chỉ chứa test data và logical target.
 
 ## 10. Core Module Dependency
 
-test_executor.py
-    ↓
-keyword_executor.py
-    ↓
-keyword_registry.py
-    ↓
-keywords/
-    ↓
-pages/
-    ↓
-driver_manager.py
-    ↓
+```text
+tests
+  ↓
+TestExecutor
+  ↓
+KeywordExecutor
+  ↓
+KeywordRegistry
+  ↓
+Keyword Library
+  ↓
+POM
+  ↓
 Selenium
 
-## 11. Kết quả thiết kế
+pytest fixture → DriverManager → TestContext
+```
 
-Framework có các module lõi:
+File chính thức:
 
-core/
-├── driver_manager.py
-├── test_executor.py
-├── keyword_executor.py
-└── test_context.py
+```text
+core/test_executor.py
+```
+
+Không sử dụng `test_excutor.py`.
