@@ -47,3 +47,19 @@
 2. Create a base_page which is made up from common methods (load, find_element, click, enter_text, get_text, get title, get_url)
     => This will be inherited by other pages
     => repeatable and maintainable
+
+
+
+Một số câu lệnh chạy allure
+
+pytest tests/framework --observe-seconds=0
+
+pytest --collect-only -q
+
+pytest tests/failure_demo/demo_failure_evidence.py --observe-seconds=0
+
+pytest tests/web --observe-seconds=0
+
+allure serve allure-results
+
+

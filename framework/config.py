@@ -7,6 +7,7 @@ DATA_DIR = ROOT / "data"
 EXCEL_DIR = DATA_DIR / "excel"
 EXCEL_FILE = EXCEL_DIR / "login_hybrid.xlsx"
 LOCATOR_FILE = EXCEL_DIR / "locators.xlsx"
+ARTIFACTS_DIR = ROOT / "artifacts"
 
 LOGIN_URL = {"login": "https://demoqa.com/login"}
 

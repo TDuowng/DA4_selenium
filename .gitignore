@@ -6,3 +6,6 @@ __pycache__/
 # Excel temporary/lock files
 ~$*
 $*
+artifacts/
+allure-results/
+allure-report/

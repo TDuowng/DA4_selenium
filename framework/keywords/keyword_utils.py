@@ -11,7 +11,7 @@ class KeywordError(Exception):
     """Base exception for keyword execution errors."""
 
 
-class VerificationFailed(KeywordError):
+class VerificationFailed(KeywordError, AssertionError):
     """Raised when a verification keyword fails."""
 
 
