@@ -3,3 +3,5 @@ pytest==9.1.1
 webdriver-manager
 pytest-html
 openpyxl
+pandas
+allure-pytest

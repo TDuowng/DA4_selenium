@@ -2,11 +2,23 @@ from __future__ import annotations
 
 from typing import Any
 
+import allure
+
 from keywords.keyword_registry import KeywordRegistry
+from utils.error_classifier import classify_exception
+from utils.logging_config import event_context, get_logger
 
 from .keyword_executor import KeywordExecutor
 
 FIELDS = {"case_id", "step", "keyword", "target", "data", "expected"}
+SENSITIVE = ("password",)
+
+
+def _mask(row: dict[str, str]) -> str:
+    """Không để mật khẩu lọt vào log/báo cáo."""
+    if any(word in row["target"].lower() for word in SENSITIVE) and row["data"]:
+        return "***"
+    return row["data"]
 
 
 class TestExecutor:
@@ -47,15 +59,48 @@ class TestExecutor:
 
     def run(self, steps: list[dict[str, str]]) -> str:
         self.validate_steps(steps)
+        log = get_logger()
+        case_id = steps[0]["case_id"]
+        log.info(
+            "Bắt đầu test case",
+            extra=event_context(tc_id=case_id, action="execute_case", result="START"),
+        )
 
         for row in steps:
-            try:
-                self.keyword_executor.execute(row)
-            except Exception as error:
-                error.add_note(
-                    f"Case {row['case_id']}, step {row['step']}, "
-                    f"keyword {row['keyword']}"
-                )
-                raise
+            ctx = event_context(
+                case_id, row["step"], row["keyword"], row["target"], "START"
+            )
+            log.info("Bắt đầu bước", extra=ctx)
 
+            title = f"{case_id} | Step {row['step']} | {row['keyword']} | {row['target'] or '-'}"
+            data = _mask(row)
+            if data:
+                title += f" | {data}"
+
+            with allure.step(title):
+                try:
+                    result = self.keyword_executor.execute(row)
+                except Exception as error:
+                    category = classify_exception(error)
+                    error.add_note(
+                        f"Case {case_id}, step {row['step']}, keyword {row['keyword']}, "
+                        f"target {row['target'] or '-'}, category {category}"
+                    )
+                    log.exception(
+                        f"Bước thất bại; category={category}",
+                        extra={**ctx, "result": "FAIL"},
+                    )
+                    allure.attach(
+                        category, "error-category", allure.attachment_type.TEXT
+                    )
+                    raise
+                log.info(
+                    getattr(result, "message", "Hoàn thành bước"),
+                    extra={**ctx, "result": "PASS"},
+                )
+
+        log.info(
+            "Hoàn thành test case",
+            extra=event_context(tc_id=case_id, action="execute_case", result="PASS"),
+        )
         return "PASS"
