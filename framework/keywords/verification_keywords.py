@@ -2,6 +2,10 @@ from __future__ import annotations
 
 from typing import Any
 
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
+
 from .keyword_utils import (
     KeywordError,
     KeywordResult,
@@ -78,6 +82,34 @@ def verify_url(
         (f"URL contains '{expected_value}'"),
         actual=actual_url,
     )
+
+
+def verify_alert(
+    target: Any,
+    data: Any,
+    expected: Any,
+    context: Any,
+) -> KeywordResult:
+    """Verify the exact text of a JavaScript alert, then accept it.
+
+    Excel: VerifyAlert | [blank] | [blank] | Expected alert text
+    """
+    expected_value = require_expected("VerifyAlert", expected)
+    driver = get_driver(context)
+    timeout = page_timeout(driver, context)
+
+    try:
+        alert = WebDriverWait(driver, timeout).until(EC.alert_is_present())
+    except TimeoutException:
+        fail("VerifyAlert", "Không xuất hiện JavaScript Alert trong thời gian chờ")
+
+    actual = alert.text
+    alert.accept()
+
+    if normalize_text(actual) != normalize_text(expected_value):
+        fail("VerifyAlert", f"Expected='{expected_value}'", actual)
+
+    return KeywordResult.ok("Alert text matched", actual=actual)
 
 
 def verify_text(
@@ -684,6 +716,7 @@ def verify_keyword(
 
     allowed = {
         "VerifyUrl",
+        "VerifyAlert",
         "VerifyText",
         "VerifyTextContains",
         "VerifyFieldState",
@@ -805,6 +838,7 @@ def verify_data_match(
 
 VERIFICATION_HANDLERS = {
     "VerifyUrl": verify_url,
+    "VerifyAlert": verify_alert,
     "VerifyText": verify_text,
     "VerifyTextContains": verify_text_contains,
     "VerifyFieldState": verify_field_state,

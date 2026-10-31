@@ -195,7 +195,7 @@ def _normalize_row(row):
 # ============================================================
 
 
-def _validate_target(where, keyword, target):
+def _validate_target(where, keyword, target, website=None):
     """
     Kiểm tra target theo KEYWORD_SPEC.
 
@@ -299,6 +299,7 @@ def _validate_target(where, keyword, target):
     # --------------------------------------------------------
 
     if element_key is not None:
+        from config import SITE_CONFIG
 
         page_name_value = getattr(page_class, "PAGE_NAME", "")
 
@@ -307,14 +308,33 @@ def _validate_target(where, keyword, target):
 
         locator_reader = get_locator_reader(LOCATOR_FILE)
 
-        if not locator_reader.has_locator(
-            page_name_value,
-            element_key,
-        ):
+        if website is not None:
+            # Kiểm tra đúng website của test case
+            if website not in SITE_CONFIG:
+                raise ValueError(f"{where}: website '{website}' không được hỗ trợ")
+
+            sheet = SITE_CONFIG[website]["locator_sheet"]
+
+            exists = locator_reader.has_locator(
+                page_name_value, element_key, sheet=sheet
+            )
+
+        else:
+            # Khi validate template dùng chung,
+            # chấp nhận locator thuộc một website
+            # đã được cấu hình.
+            exists = any(
+                locator_reader.has_locator(
+                    page_name_value, element_key, sheet=site["locator_sheet"]
+                )
+                for site in SITE_CONFIG.values()
+            )
+
+        if not exists:
             raise ValueError(
-                f"{where}: element {element_key!r} "
-                f"chưa có trong locators.xlsx "
-                f"(Page={page_name_value!r})"
+                f"{where}: không tìm thấy locator "
+                f"{page_name_value}.{element_key}"
+                + (f" cho website '{website}'" if website else "")
             )
 
 
@@ -689,5 +709,19 @@ def bind_template(template, case):
                 row[field] = _clean_cell(case[key])
 
         steps.append(row)
+
+    # Kiểm tra locator theo website của test case
+    website = _clean_cell(case.get("website"))
+
+    if not website:
+        raise ValueError(f"Case {case['case_id']}: thiếu website")
+
+    for row in steps:
+        _validate_target(
+            where=f"Case {case['case_id']} step {row['step']}",
+            keyword=row["keyword"],
+            target=row["target"],
+            website=website,
+        )
 
     return validate_steps(steps)

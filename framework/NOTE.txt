@@ -48,8 +48,61 @@
     => This will be inherited by other pages
     => repeatable and maintainable
 
+31/10/26: Hỗ trợ kiểm thử đa website và xác minh JavaScript Alert**
+**1. Cập nhật cấu hình website (`config.py`)**
+- Thay cấu hình URL đăng nhập riêng lẻ (`LOGIN_URL`, `DEMOQA_LOGIN_URL`) bằng dictionary `SITE_CONFIG`.
+- Bổ sung cơ chế ánh xạ mã website với URL và Sheet locator tương ứng.
+- Cấu hình 3 website:
+  - `demoQA`: https://demoqa.com/login
+  - `ts`: https://itsaki5.github.io/the_souvenirs/login.html
+  - `taophoBA`: https://tduowng.github.io/Web-TPBA-main/login.html
 
+**2. Cập nhật cơ chế quản lý locator (`utils/locator_reader.py`)**
+- Trước: Locator được định danh bằng `(page, element)`, không cho phép trùng giữa các Sheet.
+- Sau: Locator được định danh bằng `(sheet, page, element)`, cho phép nhiều website sử dụng cùng tên locator.
+- Bổ sung tham số `sheet` trong `has_locator()` và `get_locator()`.
+- Vẫn kiểm tra locator trùng trong cùng một Sheet.
 
+**3. Cập nhật Page Object (`pages/base_page.py`, `pages/login_page.py`)**
+- `BasePage` hỗ trợ chọn locator theo `locator_sheet`.
+- `LoginPage` lấy URL và Sheet locator động từ `SITE_CONFIG` thay vì URL cố định.
+- Tái sử dụng các thao tác đăng nhập cho nhiều website.
+
+**4. Cập nhật Target Resolver (`keywords/target_resolver.py`)**
+- Trước: Khởi tạo Page Object bằng `page_class(driver)`.
+- Sau: Đọc `website` từ context và truyền vào `LoginPage(driver, website=website)`.
+- Tự động lựa chọn website tương ứng với test case.
+
+**5. Cập nhật Template Binding (`utils/template_binding.py`)**
+- Bổ sung kiểm tra locator theo website.
+- Cho phép template dùng chung giữa các website.
+- Kiểm tra sự tồn tại của locator trong đúng Sheet khi binding test case.
+- Giữ nguyên cơ chế placeholder và kiểm tra dữ liệu trước khi mở browser.
+
+**6. Cập nhật Excel Hybrid Reader (`utils/hybrid_reader.py`)**
+- Trước: Test case chỉ lưu `case_id`, `template_id` và `steps`.
+- Sau: Bổ sung trường `website`, đọc từ Sheet `test_cases`.
+- Kiểm tra website hợp lệ theo `SITE_CONFIG`.
+- Truyền thông tin website cho quá trình thực thi kiểm thử.
+
+**7. Bổ sung kiểm tra JavaScript Alert**
+- `verification_keywords.py`: Thêm keyword `VerifyAlert` sử dụng Selenium Alert API để đọc, so sánh và đóng thông báo.
+- `keyword_registry.py`: Đăng ký keyword `VerifyAlert`.
+- `keyword_spec.py`: Khai báo quy tắc Target, Data và Expected cho keyword mới.
+- Cho phép xác minh thông báo lỗi đăng nhập qua JavaScript Alert.
+
+**8. Cập nhật dữ liệu kiểm thử Excel**
+- `locators.xlsx`: Bổ sung Sheet locator `ts` và `taophoBA`, giữ Sheet `demoQA`.
+- `login_hybrid.xlsx`: Bổ sung dữ liệu kiểm thử cho nhiều website.
+- Tái sử dụng template đăng nhập và tách template riêng khi cách xác minh kết quả khác nhau.
+- Hỗ trợ kiểm tra đăng nhập thành công, thông tin đăng nhập sai, trường bắt buộc và giới hạn ký tự.
+
+**9. Cập nhật thực thi test (`tests/web/test_login.py`)**
+- Truyền `website` từ test case vào context.
+- Bổ sung tên website vào định danh Pytest và thông tin Allure.
+- Hỗ trợ chọn website tự động mà không cần thay URL thủ công.
+
+________________________________________________________________________________________________________________
 Một số câu lệnh chạy allure
 
 pytest tests/framework --observe-seconds=0
@@ -59,6 +112,7 @@ pytest --collect-only -q
 pytest tests/failure_demo/demo_failure_evidence.py --observe-seconds=0
 
 pytest tests/web --observe-seconds=0
+pytest tests/web -k LOGIN_TS --observe-seconds=0 -v #chạy test login the souvernirs
 
 allure serve allure-results
 

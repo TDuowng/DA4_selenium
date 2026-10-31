@@ -20,14 +20,17 @@ class BasePage:
     PAGE_NAME = ""
 
     # Initialize the BasePage and wait for the page to load
-    def __init__(self, driver):
+    def __init__(self, driver, locator_sheet=None):
         self.driver = driver
         self.wait = WebDriverWait(driver, 10)
         self.locators = get_locator_reader(str(LOCATOR_FILE))
+        self.locator_sheet = locator_sheet
 
     # Get locator
     def locator(self, element: str) -> tuple[str, str]:
-        return self.locators.get_locator(self.PAGE_NAME, element)
+        return self.locators.get_locator(
+            self.PAGE_NAME, element, sheet=self.locator_sheet
+        )
 
     # --- Common actions ---
     def _resolve_locator(self, element: str | tuple[str, str]) -> tuple[str, str]:

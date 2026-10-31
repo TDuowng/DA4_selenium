@@ -25,10 +25,15 @@ class LocatorReader:
 
     def __init__(self, file_path):
         self.file_path = Path(file_path)
-        self._locators: dict[tuple[str, str], tuple[str, str]] = {}
-        self._source: dict[tuple[str, str], str] = (
+        self._locators: dict[tuple[str, str, str], tuple[str, str]] = (
             {}
         )  # key -> tên sheet, để báo lỗi trùng
+
+    # -- Hàm chuẩn hóa str cho Page và Element:
+    # "LoginPage ", "loginpage", "LoginPage"
+    @staticmethod
+    def _norm(value) -> str:
+        return "" if value is None else str(value).strip().lower()
 
     def load_all(self) -> "LocatorReader":
         workbook = load_workbook(self.file_path, read_only=True, data_only=True)
@@ -88,34 +93,51 @@ class LocatorReader:
             if not value:
                 raise ValueError(f"{where}: Value trống ({page}.{element})")
 
-            key = (page, element)
+            key = (self._norm(sheet_name), page, element)
 
             if key in self._locators:
-                raise ValueError(
-                    f"{where}: trùng locator {page}.{element} "
-                    f"(đã có ở sheet '{self._source[key]}')"
-                )
+                raise ValueError(f"{where}: trùng locator {page}.{element}")
 
             self._locators[key] = (self.LOCATOR_TYPES[locator_type], value)
 
-            self._source[key] = sheet_name
+    def has_locator(self, page, element, sheet=None) -> bool:
+        page = self._norm(page)
+        element = self._norm(element)
 
-    def has_locator(self, page, element) -> bool:
-        return (self._norm(page), self._norm(element)) in self._locators
+        if sheet is not None:
+            key = (self._norm(sheet), page, element)
+            return key in self._locators
 
-    def get_locator(self, page, element) -> tuple[str, str]:
-        key = (self._norm(page), self._norm(element))
+        return any(p == page and e == element for _, p, e in self._locators)
 
-        if key not in self._locators:
+    def get_locator(self, page, element, sheet=None) -> tuple[str, str]:
+        page = self._norm(page)
+        element = self._norm(element)
+
+        if sheet is not None:
+            key = (self._norm(sheet), page, element)
+
+            if key not in self._locators:
+                raise KeyError(f"Không tìm thấy Locator: " f"{sheet}.{page}.{element}")
+
+            return self._locators[key]
+
+        matches = [
+            locator
+            for (_, p, e), locator in self._locators.items()
+            if p == page and e == element
+        ]
+
+        if not matches:
             raise KeyError(f"Không tìm thấy Locator: {page}.{element}")
 
-        return self._locators[key]
+        if len(matches) > 1:
+            raise ValueError(
+                f"Locator {page}.{element} có ở nhiều Sheet. "
+                f"Vui lòng chỉ định Sheet."
+            )
 
-    # -- Hàm chuẩn hóa str cho Page và Element:
-    # "LoginPage ", "loginpage", "LoginPage"
-    @staticmethod
-    def _norm(value) -> str:
-        return "" if value is None else str(value).strip().lower()
+        return matches[0]
 
 
 _READERS: dict[str, LocatorReader] = {}
