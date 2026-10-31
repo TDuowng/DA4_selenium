@@ -21,6 +21,7 @@ from .business_keywords import (
 
 from .verification_keywords import (
     verify_url,
+    verify_alert,
     verify_text,
     verify_text_contains,
     verify_field_state,
@@ -50,6 +51,7 @@ OFFICIAL_KEYWORDS = {
     "AddToCart",
     "SetProductOutOfStock",
     "VerifyUrl",
+    "VerifyAlert",
     "VerifyText",
     "VerifyTextContains",
     "VerifyFieldState",
@@ -83,6 +85,7 @@ KEYWORD_MAP: dict[str, KeywordHandler] = {
     "SetProductOutOfStock": set_product_out_of_stock,
     # Verification Keywords
     "VerifyUrl": verify_url,
+    "VerifyAlert": verify_alert,
     "VerifyText": verify_text,
     "VerifyTextContains": verify_text_contains,
     "VerifyFieldState": verify_field_state,

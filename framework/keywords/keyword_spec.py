@@ -24,6 +24,7 @@ KEYWORD_SPEC = {
     "SetText": Spec(target="element", data="required"),  # rỗng thì ghi <empty>
     "ClickElement": Spec(target="element"),
     "VerifyUrl": Spec(target="none", expected="required"),
+    "VerifyAlert": Spec(target="none", data="forbidden", expected="required"),
     "VerifyText": Spec(target="element", expected="required"),
     "VerifyFieldState": Spec(target="element", expected="required"),
     "VerifyAttribute": Spec(target="element", data="required"),  # data = tên attribute

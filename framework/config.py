@@ -7,8 +7,19 @@ DATA_DIR = ROOT / "data"
 EXCEL_DIR = DATA_DIR / "excel"
 EXCEL_FILE = EXCEL_DIR / "login_hybrid.xlsx"
 LOCATOR_FILE = EXCEL_DIR / "locators.xlsx"
+ARTIFACTS_DIR = ROOT / "artifacts"
 
-LOGIN_URL = {"login": "https://demoqa.com/login"}
+SITE_CONFIG = {
+    "demoQA": {"url": "https://demoqa.com/login", "locator_sheet": "demoQA"},
+    "ts": {
+        "url": "https://itsaki5.github.io/the_souvenirs/login.html",
+        "locator_sheet": "ts",
+    },
+    "taophoBA": {
+        "url": "https://tduowng.github.io/Web-TPBA-main/login.html",
+        "locator_sheet": "taophoBA",
+    },
+}
 
 TIMEOUT = 15
 
