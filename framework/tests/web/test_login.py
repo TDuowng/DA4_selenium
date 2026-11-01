@@ -24,9 +24,18 @@ if not CASES:
     )
 
 
-@pytest.mark.parametrize("case", CASES, ids=lambda c: c["case_id"])
+@pytest.mark.parametrize("case", CASES, ids=lambda c: f"{c['website']}_{c['case_id']}")
 def test_login(context, case):
-    allure.dynamic.title(f"{case['case_id']} - Login")
+    allure.dynamic.title(f"{case['case_id']} - {case['website']} - Login")
+
     allure.dynamic.feature("Login")
+    allure.dynamic.parameter("website", case["website"])
     allure.dynamic.parameter("template_id", case["template_id"])
+
+    # Gắn website vào context trước khi thực thi
+    if isinstance(context, dict):
+        context["website"] = case["website"]
+    else:
+        context.website = case["website"]
+
     CaseExecutor(context).run(case["steps"])

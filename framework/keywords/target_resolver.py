@@ -61,6 +61,30 @@ def get_driver(context: Any):
     return driver
 
 
+def get_website(context: Any) -> str:
+    """Lấy website của test case hiện tại từ context."""
+    from config import SITE_CONFIG
+
+    if isinstance(context, dict):
+        website = context.get("website")
+    else:
+        website = getattr(context, "website", None)
+
+    if not website:
+        raise TargetError(
+            "Context chưa có website. " "Cần truyền website từ Excel vào context."
+        )
+
+    website = str(website).strip()
+
+    if website not in SITE_CONFIG:
+        raise TargetError(
+            f"Website '{website}' không được hỗ trợ. " f"Hợp lệ: {list(SITE_CONFIG)}"
+        )
+
+    return website
+
+
 def page_class_name(page_name: str) -> str:
     """
     Convert Excel Page Object name to class name.
@@ -155,17 +179,6 @@ def resolve_page(
     target: Any,
     context: Any,
 ) -> BasePage:
-    """
-    Resolve an Excel Target to a Page Object.
-
-    Example:
-
-        Target:
-            LoginPage
-
-        Result:
-            LoginPage(driver)
-    """
 
     if target is None:
         raise TargetError("Target không được để trống.")
@@ -178,23 +191,27 @@ def resolve_page(
     if "." in target_name:
         raise TargetError(
             f"Target '{target_name}' là element Target. "
-            f"resolve_page() chỉ nhận Page Target."
+            "resolve_page() chỉ nhận Page Target."
         )
 
     if not PAGE_TARGET_PATTERN.fullmatch(target_name):
-        raise TargetError(f"Target Page không hợp lệ: " f"'{target_name}'.")
+        raise TargetError(f"Target Page không hợp lệ: '{target_name}'.")
 
     driver = get_driver(context)
+    website = get_website(context)
 
     page_class = load_page_class(target_name)
 
     try:
+        # LoginPage nhận tham số website
+        if page_class.__name__ == "LoginPage":
+            return page_class(driver, website=website)
+
+        # Các Page Object khác giữ logic cũ
         return page_class(driver)
+
     except TypeError as exc:
-        raise TargetError(
-            f"Không thể khởi tạo {target_name}. "
-            f"Page Object phải nhận driver trong __init__()."
-        ) from exc
+        raise TargetError(f"Không thể khởi tạo {target_name}: {exc}") from exc
 
 
 def resolve_element(
