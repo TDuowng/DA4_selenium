@@ -60,6 +60,6 @@ pytest tests/failure_demo/demo_failure_evidence.py --observe-seconds=0
 
 pytest tests/web --observe-seconds=0
 
-allure serve allure-results
+allure serve artifacts/allure-results
 
 
