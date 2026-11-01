@@ -16,15 +16,15 @@ class LoginPage(BasePage):
         self.website = website
         self.URL = site["url"]
 
-    def login(self, username=None, password=None):
-        self.open()
+    # def login(self, username=None, password=None):
+    #     self.open()
 
-        self.enter_text(
-            "username", username if username is not None else DEFAULT_USERNAME
-        )
+    #     self.enter_text(
+    #         "username", username if username is not None else DEFAULT_USERNAME
+    #     )
 
-        self.enter_text(
-            "password", password if password is not None else DEFAULT_PASSWORD
-        )
+    #     self.enter_text(
+    #         "password", password if password is not None else DEFAULT_PASSWORD
+    #     )
 
-        self.click("loginButton")
+    #     self.click("loginButton")
