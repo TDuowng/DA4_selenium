@@ -68,9 +68,7 @@ def build_cases(template_rows, data_rows):
             raise ValueError(f"case_id rỗng hoặc trùng: {case_id!r}")
 
         if template_id not in templates:
-            raise ValueError(
-                f"Case {case_id}: template không tồn tại: " f"{template_id!r}"
-            )
+            raise ValueError()
 
         seen.add(case_id)
         referenced.add(template_id)
