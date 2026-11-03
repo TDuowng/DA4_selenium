@@ -12,6 +12,8 @@ from utils.template_binding import (
 
 STEPS_SHEET = "test_steps"
 CASES_SHEET = "test_cases"
+SITES_SHEET = "sites"
+SITE_FIELDS = {"site_id", "url"}
 REQUIRED_CASE_FIELDS = {
     "case_id",
     "template_id",
@@ -25,11 +27,21 @@ def records(frame):
     return [r for r in rows if any(v != "" for v in r.values())]
 
 
-def build_cases(template_rows, data_rows):
+def build_cases(template_rows, data_rows, site_rows):
     """Join theo template_id: một dòng test_case -> một case."""
 
-    if not template_rows or not data_rows:
-        raise ValueError(f"{STEPS_SHEET}/{CASES_SHEET} không được rỗng")
+    if not template_rows or not data_rows or not site_rows:
+        raise ValueError(f"{STEPS_SHEET}/{CASES_SHEET}/{SITES_SHEET} không được rỗng")
+
+    sites = {}
+    for row in site_rows:
+        site_id = str(row["site_id"]).strip()
+        url = str(row["url"]).strip()
+        if not site_id or not url:
+            raise ValueError(f"{SITES_SHEET}: site_id và url không được trống")
+        if site_id in sites:
+            raise ValueError(f"{SITES_SHEET}: site_id trùng: {site_id!r}")
+        sites[site_id] = url
 
     templates = {}
 
@@ -63,12 +75,16 @@ def build_cases(template_rows, data_rows):
                 f"không hợp lệ. "
                 f"Website hỗ trợ: {list(SITE_CONFIG)}"
             )
+        if website not in sites:
+            raise ValueError(
+                f"Case {case_id}: website {website!r} không có trong sheet {SITES_SHEET}"
+            )
 
         if not case_id or case_id in seen:
             raise ValueError(f"case_id rỗng hoặc trùng: {case_id!r}")
 
         if template_id not in templates:
-            raise ValueError()
+            raise ValueError(f"Case {case_id}: template_id {template_id!r} không tồn tại")
 
         seen.add(case_id)
         referenced.add(template_id)
@@ -82,6 +98,7 @@ def build_cases(template_rows, data_rows):
                 "case_id": case_id,
                 "template_id": template_id,
                 "website": website,
+                "site_url": sites[website],
                 "steps": steps,
             }
         )
@@ -98,11 +115,17 @@ def read_hybrid_cases(path):
     # dtype=str + keep_default_na=False: giữ ô rỗng là "", giữ "NA"/"0123"; KHÔNG trim dữ liệu
     sheets = pd.read_excel(
         path,
-        sheet_name=[STEPS_SHEET, CASES_SHEET],
+        sheet_name=[STEPS_SHEET, CASES_SHEET, SITES_SHEET],
         dtype=str,
         keep_default_na=False,
         engine="openpyxl",
     )
     if set(sheets[STEPS_SHEET].columns) != TEMPLATE_FIELDS:
         raise ValueError(f"{STEPS_SHEET} thiếu/thừa cột")
-    return build_cases(records(sheets[STEPS_SHEET]), records(sheets[CASES_SHEET]))
+    if set(sheets[SITES_SHEET].columns) != SITE_FIELDS:
+        raise ValueError(f"{SITES_SHEET} thiếu/thừa cột")
+    return build_cases(
+        records(sheets[STEPS_SHEET]),
+        records(sheets[CASES_SHEET]),
+        records(sheets[SITES_SHEET]),
+    )

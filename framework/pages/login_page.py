@@ -5,7 +5,7 @@ from pages.base_page import BasePage
 class LoginPage(BasePage):
     PAGE_NAME = "login"
 
-    def __init__(self, driver, website="demoQA"):
+    def __init__(self, driver, website="demoQA", url=None):
         if website not in SITE_CONFIG:
             raise ValueError(f"Website không hỗ trợ: {website}")
 
@@ -14,7 +14,7 @@ class LoginPage(BasePage):
         super().__init__(driver, locator_sheet=site["locator_sheet"])
 
         self.website = website
-        self.URL = site["url"]
+        self.URL = url if url is not None else site["url"]
 
     def login(self, username=None, password=None):
         self.open()

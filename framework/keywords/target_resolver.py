@@ -200,12 +200,17 @@ def resolve_page(
     driver = get_driver(context)
     website = get_website(context)
 
-    page_class = load_page_class(target_name)
+    page_class: Any = load_page_class(target_name)
 
     try:
         # LoginPage nhận tham số website
         if page_class.__name__ == "LoginPage":
-            return page_class(driver, website=website)
+            site_url = (
+                context.get("site_url")
+                if isinstance(context, dict)
+                else getattr(context, "site_url", None)
+            )
+            return page_class(driver, website=website, url=site_url)
 
         # Các Page Object khác giữ logic cũ
         return page_class(driver)
