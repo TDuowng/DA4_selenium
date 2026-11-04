@@ -8,6 +8,7 @@ from typing import Any
 
 from config import TIMEOUT
 from pages.base_page import BasePage
+from pages.search_page import SearchPage
 
 
 class TargetError(Exception):
@@ -198,7 +199,9 @@ def resolve_page(
 
     try:
         # Các Page Object đa website nhận URL và sheet locator từ test case.
-        if page_class.__name__ in {"LoginPage", "RegisterPage"}:
+        if page_class.__name__ in {"LoginPage", "RegisterPage"} or issubclass(
+            page_class, SearchPage
+        ):
             site_url = (
                 context.get("site_url")
                 if isinstance(context, dict)
@@ -206,11 +209,13 @@ def resolve_page(
             )
             if not site_url:
                 raise TargetError("Context chưa có site_url từ sheet sites.")
+
             timeout = (
                 context.get("timeout")
                 if isinstance(context, dict)
                 else getattr(context, "timeout", None)
             )
+
             return page_class(
                 driver,
                 website=website,

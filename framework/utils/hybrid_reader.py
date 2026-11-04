@@ -83,12 +83,18 @@ def build_cases(template_rows, data_rows, site_rows):
             raise ValueError(f"case_id rỗng hoặc trùng: {case_id!r}")
 
         if template_id not in templates:
-            raise ValueError(f"Case {case_id}: template_id {template_id!r} không tồn tại")
+            raise ValueError(
+                f"Case {case_id}: template_id {template_id!r} không tồn tại"
+            )
 
         seen.add(case_id)
         referenced.add(template_id)
 
         # Bind template với dữ liệu test case
+        # Đồng bộ định danh website trước khi bind template
+        if not row.get("site_id") and row.get("website"):
+            row["site_id"] = row["website"]
+
         steps = bind_template(templates[template_id], row)
 
         # Truyền website vào test case

@@ -1,4 +1,4 @@
-# Đọc locator từ locators.xlsx. Mỗi sheet = 1 website/nhóm trang, cột: Page | Element | Type | Value.
+# Đọc locator từ locators.xlsx. Mỗi sheet = 1 site_id/nhóm trang, cột: Page | Element | Type | Value.
 # Toàn bộ sheet được nạp 1 lần và kiểm tra ngay (trước khi mở browser).
 # Tên Page/Element KHÔNG phân biệt hoa thường ("LoginPage.Username" khớp "username").
 # Tên Page phải duy nhất trên TẤT CẢ sheet (trùng sẽ báo lỗi).

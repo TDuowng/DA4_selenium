@@ -548,18 +548,16 @@ def verify_element_count(
     )
 
     def check_count():
-        actual_count = page.count_elements(element_key)
+        # Return a boolean: count=0 must be treated as a successful match.
+        return page.count_elements(element_key) == expected_count
 
-        return actual_count if actual_count == expected_count else False
-
-    actual_count = poll(
+    matched = poll(
         check_count,
         timeout=timeout,
     )
 
-    if actual_count is False:
-        actual_count = page.count_elements(element_key)
-
+    actual_count = page.count_elements(element_key)
+    if not matched:
         fail(
             "VerifyElementCount",
             (f"Expected count=" f"{expected_count}"),
