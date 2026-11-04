@@ -1,20 +1,15 @@
-from config import DEFAULT_PASSWORD, DEFAULT_USERNAME, SITE_CONFIG
+from config import DEFAULT_PASSWORD, DEFAULT_USERNAME, TIMEOUT
 from pages.base_page import BasePage
 
 
 class LoginPage(BasePage):
     PAGE_NAME = "login"
 
-    def __init__(self, driver, website="demoQA", url=None):
-        if website not in SITE_CONFIG:
-            raise ValueError(f"Website không hỗ trợ: {website}")
-
-        site = SITE_CONFIG[website]
-
-        super().__init__(driver, locator_sheet=site["locator_sheet"])
+    def __init__(self, driver, website, url, timeout=TIMEOUT):
+        super().__init__(driver, locator_sheet=website, timeout=timeout)
 
         self.website = website
-        self.URL = url if url is not None else site["url"]
+        self.URL = url
 
     def login(self, username=None, password=None):
         self.open()

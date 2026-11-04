@@ -25,6 +25,7 @@ class LocatorReader:
 
     def __init__(self, file_path):
         self.file_path = Path(file_path)
+        self._sheets: set[str] = set()
         self._locators: dict[tuple[str, str, str], tuple[str, str]] = (
             {}
         )  # key -> tên sheet, để báo lỗi trùng
@@ -50,6 +51,7 @@ class LocatorReader:
         return self
 
     def _load_sheet(self, sheet_name, rows):
+        self._sheets.add(self._norm(sheet_name))
         rows = iter(rows)
 
         header = next(rows, None)
@@ -99,6 +101,9 @@ class LocatorReader:
                 raise ValueError(f"{where}: trùng locator {page}.{element}")
 
             self._locators[key] = (self.LOCATOR_TYPES[locator_type], value)
+
+    def has_sheet(self, sheet) -> bool:
+        return self._norm(sheet) in self._sheets
 
     def has_locator(self, page, element, sheet=None) -> bool:
         page = self._norm(page)

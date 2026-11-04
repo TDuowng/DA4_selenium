@@ -9,6 +9,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
 
+from config import TIMEOUT
 from utils.locator_reader import get_locator_reader
 
 LOCATOR_FILE = (
@@ -20,9 +21,10 @@ class BasePage:
     PAGE_NAME = ""
 
     # Initialize the BasePage and wait for the page to load
-    def __init__(self, driver, locator_sheet=None):
+    def __init__(self, driver, locator_sheet=None, timeout=TIMEOUT):
         self.driver = driver
-        self.wait = WebDriverWait(driver, 10)
+        self.timeout = timeout
+        self.wait = WebDriverWait(driver, timeout)
         self.locators = get_locator_reader(str(LOCATOR_FILE))
         self.locator_sheet = locator_sheet
 
@@ -43,7 +45,12 @@ class BasePage:
 
     # Click an element on the page using a locator after waiting for it to be clickable
     def click_element(self, locator):
-        self.wait.until(EC.element_to_be_clickable(locator)).click()
+        element = self.wait.until(EC.element_to_be_clickable(locator))
+        self.driver.execute_script(
+            "arguments[0].scrollIntoView({block: 'center', inline: 'nearest'});",
+            element,
+        )
+        element.click()
 
     # Enter text into an input field on the page after clearing it first
     def enter_text(self, element: str | tuple[str, str], text: str):

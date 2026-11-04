@@ -211,6 +211,8 @@ def _validate_target(where, keyword, target, website=None):
     """
 
     target = _clean_cell(target)
+    if website is None and PLACEHOLDER.fullmatch(target):
+        return  # Target được kiểm tra sau khi ghép với từng test case.
 
     spec = KEYWORD_SPEC.get(keyword)
 
@@ -299,8 +301,6 @@ def _validate_target(where, keyword, target, website=None):
     # --------------------------------------------------------
 
     if element_key is not None:
-        from config import SITE_CONFIG
-
         page_name_value = getattr(page_class, "PAGE_NAME", "")
 
         if not page_name_value:
@@ -309,26 +309,14 @@ def _validate_target(where, keyword, target, website=None):
         locator_reader = get_locator_reader(LOCATOR_FILE)
 
         if website is not None:
-            # Kiểm tra đúng website của test case
-            if website not in SITE_CONFIG:
-                raise ValueError(f"{where}: website '{website}' không được hỗ trợ")
-
-            sheet = SITE_CONFIG[website]["locator_sheet"]
-
+            # Tên sheet locator khớp site_id trong sheet sites.
             exists = locator_reader.has_locator(
-                page_name_value, element_key, sheet=sheet
+                page_name_value, element_key, sheet=website
             )
 
         else:
-            # Khi validate template dùng chung,
-            # chấp nhận locator thuộc một website
-            # đã được cấu hình.
-            exists = any(
-                locator_reader.has_locator(
-                    page_name_value, element_key, sheet=site["locator_sheet"]
-                )
-                for site in SITE_CONFIG.values()
-            )
+            # Template dùng chung chỉ cần locator tồn tại trên một site.
+            exists = locator_reader.has_locator(page_name_value, element_key)
 
         if not exists:
             raise ValueError(
@@ -492,6 +480,7 @@ def validate_template(template):
         # Target
         # ----------------------------------------------------
 
+        _validate_placeholder(f"{where} target", row["target"])
         _validate_target(
             where,
             keyword,
@@ -687,10 +676,10 @@ def bind_template(template, case):
         row["case_id"] = case["case_id"]
 
         # ----------------------------------------------------
-        # Bind data / expected
+        # Bind target / data / expected
         # ----------------------------------------------------
 
-        for field in ("data", "expected"):
+        for field in ("target", "data", "expected"):
 
             match = PLACEHOLDER.fullmatch(row[field])
 
@@ -706,7 +695,12 @@ def bind_template(template, case):
                         f"trong test_case"
                     )
 
-                row[field] = _clean_cell(case[key])
+                value = case[key]
+                if field == "data" and row["keyword"].casefold() == "settext":
+                    # Input test có thể cố ý chứa khoảng trắng đầu/cuối.
+                    row[field] = "" if value is None else str(value)
+                else:
+                    row[field] = _clean_cell(value)
 
         steps.append(row)
 

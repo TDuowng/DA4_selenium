@@ -10,7 +10,7 @@ from selenium.webdriver.edge.options import Options as EdgeOptions
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 
 import config
-from config import ARTIFACTS_DIR, TIMEOUT
+from config import ARTIFACTS_DIR, PAGE_LOAD_TIMEOUT, TIMEOUT
 from utils.artifact_manager import create_artifact_layout
 from utils.error_classifier import classify_exception, classify_report_text
 from utils.evidence import collect_failure_evidence
@@ -111,7 +111,7 @@ def driver(request):
 
     request.node.driver = drv  # MỚI: để hook makereport lấy được driver
     try:
-        drv.set_page_load_timeout(45)  # MỚI
+        drv.set_page_load_timeout(PAGE_LOAD_TIMEOUT)
         yield drv
     finally:
         time.sleep(request.config.getoption("--observe-seconds"))  # MỚI

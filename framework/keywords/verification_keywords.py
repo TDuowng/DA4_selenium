@@ -377,6 +377,19 @@ def verify_attribute(
         context,
     )
 
+    if expected_value == "<absent>":
+        actual = page.get_attribute(element_key, str(attribute_name))
+        if actual is not None:
+            fail(
+                "VerifyAttribute",
+                f"Attribute='{attribute_name}' expected to be absent",
+                actual,
+            )
+        return KeywordResult.ok(
+            f"Attribute '{attribute_name}' is absent",
+            actual=actual,
+        )
+
     timeout = page_timeout(
         page,
         context,

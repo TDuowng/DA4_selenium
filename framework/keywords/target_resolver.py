@@ -6,6 +6,7 @@ import importlib
 import re
 from typing import Any
 
+from config import TIMEOUT
 from pages.base_page import BasePage
 
 
@@ -63,8 +64,6 @@ def get_driver(context: Any):
 
 def get_website(context: Any) -> str:
     """Lấy website của test case hiện tại từ context."""
-    from config import SITE_CONFIG
-
     if isinstance(context, dict):
         website = context.get("website")
     else:
@@ -76,11 +75,6 @@ def get_website(context: Any) -> str:
         )
 
     website = str(website).strip()
-
-    if website not in SITE_CONFIG:
-        raise TargetError(
-            f"Website '{website}' không được hỗ trợ. " f"Hợp lệ: {list(SITE_CONFIG)}"
-        )
 
     return website
 
@@ -203,14 +197,26 @@ def resolve_page(
     page_class: Any = load_page_class(target_name)
 
     try:
-        # LoginPage nhận tham số website
-        if page_class.__name__ == "LoginPage":
+        # Các Page Object đa website nhận URL và sheet locator từ test case.
+        if page_class.__name__ in {"LoginPage", "RegisterPage"}:
             site_url = (
                 context.get("site_url")
                 if isinstance(context, dict)
                 else getattr(context, "site_url", None)
             )
-            return page_class(driver, website=website, url=site_url)
+            if not site_url:
+                raise TargetError("Context chưa có site_url từ sheet sites.")
+            timeout = (
+                context.get("timeout")
+                if isinstance(context, dict)
+                else getattr(context, "timeout", None)
+            )
+            return page_class(
+                driver,
+                website=website,
+                url=site_url,
+                timeout=TIMEOUT if timeout is None else timeout,
+            )
 
         # Các Page Object khác giữ logic cũ
         return page_class(driver)

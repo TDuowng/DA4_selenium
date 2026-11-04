@@ -2,7 +2,8 @@
 # Toàn bộ dữ liệu được kiểm tra lúc collect, TRƯỚC khi fixture mở Chrome.
 # Không sort để che lỗi thứ tự step, không return [] để biến lỗi thành skip.
 import pandas as pd
-from config import SITE_CONFIG
+from config import LOCATOR_FILE
+from utils.locator_reader import get_locator_reader
 
 from utils.template_binding import (
     TEMPLATE_FIELDS,
@@ -34,6 +35,7 @@ def build_cases(template_rows, data_rows, site_rows):
         raise ValueError(f"{STEPS_SHEET}/{CASES_SHEET}/{SITES_SHEET} không được rỗng")
 
     sites = {}
+    locator_reader = get_locator_reader(LOCATOR_FILE)
     for row in site_rows:
         site_id = str(row["site_id"]).strip()
         url = str(row["url"]).strip()
@@ -41,6 +43,10 @@ def build_cases(template_rows, data_rows, site_rows):
             raise ValueError(f"{SITES_SHEET}: site_id và url không được trống")
         if site_id in sites:
             raise ValueError(f"{SITES_SHEET}: site_id trùng: {site_id!r}")
+        if not locator_reader.has_sheet(site_id):
+            raise ValueError(
+                f"{SITES_SHEET}: site_id {site_id!r} không có sheet trong locators.xlsx"
+            )
         sites[site_id] = url
 
     templates = {}
@@ -68,13 +74,6 @@ def build_cases(template_rows, data_rows, site_rows):
         # Đọc website từ Excel
         website = str(row["website"]).strip()
 
-        # Kiểm tra website hợp lệ
-        if website not in SITE_CONFIG:
-            raise ValueError(
-                f"Case {case_id}: website '{website}' "
-                f"không hợp lệ. "
-                f"Website hỗ trợ: {list(SITE_CONFIG)}"
-            )
         if website not in sites:
             raise ValueError(
                 f"Case {case_id}: website {website!r} không có trong sheet {SITES_SHEET}"
@@ -99,6 +98,7 @@ def build_cases(template_rows, data_rows, site_rows):
                 "template_id": template_id,
                 "website": website,
                 "site_url": sites[website],
+                "case_data": row,
                 "steps": steps,
             }
         )

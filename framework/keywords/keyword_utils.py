@@ -6,6 +6,7 @@ import re
 from dataclasses import dataclass
 from typing import Any, Callable
 
+from config import TIMEOUT
 
 class KeywordError(Exception):
     """Base exception for keyword execution errors."""
@@ -219,7 +220,7 @@ def resolve_element(
 def page_timeout(
     page: Any,
     context: Any,
-    default: float = 10.0,
+    default: float = TIMEOUT,
 ) -> float:
     """
     Get timeout from context/page configuration.
@@ -230,10 +231,10 @@ def page_timeout(
         default
     """
 
-    timeout = getattr(
-        context,
-        "timeout",
-        None,
+    timeout = (
+        context.get("timeout")
+        if isinstance(context, dict)
+        else getattr(context, "timeout", None)
     )
 
     if timeout is None:
@@ -256,7 +257,7 @@ def page_timeout(
 
 def poll(
     condition: Callable[[], Any],
-    timeout: float = 10.0,
+    timeout: float = TIMEOUT,
     interval: float = 0.2,
 ) -> Any:
     """
