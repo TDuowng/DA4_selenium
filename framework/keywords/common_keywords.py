@@ -102,6 +102,17 @@ def set_text(
     if value == "<empty>":
         page.clear(element_key)
     else:
+        # Excel may trim whitespace-only values during binding.
+        # <spaces:N> explicitly represents N literal spaces in input.
+        if (
+            isinstance(value, str)
+            and value.startswith("<spaces:")
+            and value.endswith(">")
+        ):
+            count_text = value[len("<spaces:") : -1]
+            if not count_text.isdecimal() or int(count_text) < 1:
+                raise KeywordError("SetText: Invalid <spaces:N> value.")
+            value = " " * int(count_text)
         page.enter_text(
             element_key,
             value,
@@ -142,7 +153,9 @@ def clear_text(
     if element_key is None:
         raise KeywordError(f"ClearText yêu cầu Target là element: " f"'{target_name}'")
 
-    page.clear(element_key)
+    # page.clear(element_key)
+
+    page.clear_with_keyboard(element_key)
 
     return KeywordResult.ok(f"Cleared text from {target_name}")
 

@@ -8,6 +8,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
+from selenium.webdriver.common.keys import Keys
 
 from config import TIMEOUT
 from utils.locator_reader import get_locator_reader
@@ -69,6 +70,18 @@ class BasePage:
 
     def clear(self, element: str):
         self.find_element(element).clear()
+
+    def clear_with_keyboard(self, element_key):
+        locator = self.locator(element_key)
+
+        element = self.wait.until(EC.visibility_of_element_located(locator))
+
+        # Focus vào input mà không click chuột
+        self.driver.execute_script("arguments[0].focus();", element)
+
+        # Xóa bằng bàn phím để kích hoạt sự kiện input
+        element.send_keys(Keys.CONTROL, "a")
+        element.send_keys(Keys.BACKSPACE)
 
     # Get the text of an element on the page using a locator
     def get_text(self, element: str | tuple[str, str]):

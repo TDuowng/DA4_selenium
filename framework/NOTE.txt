@@ -103,6 +103,12 @@
 - Hỗ trợ chọn website tự động mà không cần thay URL thủ công.
 
 ________________________________________________________________________________________________________________
+fnm env --use-on-cd --shell powershell | Out-String | Invoke-Expression
+fnm use 26
+node -v
+npm -v
+codex --version
+________________________________________________________________________________________________________________
 Một số câu lệnh chạy allure
 
 pytest tests/framework --observe-seconds=0
@@ -113,6 +119,9 @@ pytest tests/failure_demo/demo_failure_evidence.py --observe-seconds=0
 
 pytest tests/web --observe-seconds=0
 pytest tests/web -k LOGIN_TS --observe-seconds=0 -v #chạy test login the souvernirs
+
+python -m pytest tests/web/test_search.py -k SEARCH_TPBA --browser chrome --headless --observe-seconds 0
+python -m pytest tests/web/test_search.py -k "demoQA_SEARCH_08 or demoQA_SEARCH_09" --browser chrome --headless --observe-seconds 0
 
 allure serve artifacts/allure-results
 
