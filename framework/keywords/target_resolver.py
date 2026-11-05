@@ -198,6 +198,28 @@ def resolve_page(
     page_class: Any = load_page_class(target_name)
 
     try:
+        # ValidationPage: sử dụng URL và sheet locator theo site_id từ Excel.
+        # Chỉ bổ sung nhánh mới; giữ nguyên cách khởi tạo Page Object cũ.
+        if page_class.__name__ == "ValidationPage":
+            site_url = (
+                context.get("site_url")
+                if isinstance(context, dict)
+                else getattr(context, "site_url", None)
+            )
+            if not site_url:
+                raise TargetError("Context chưa có site_url từ sheet sites.")
+            timeout = (
+                context.get("timeout")
+                if isinstance(context, dict)
+                else getattr(context, "timeout", None)
+            )
+            return page_class(
+                driver,
+                website=website,
+                url=site_url,
+                timeout=TIMEOUT if timeout is None else timeout,
+            )
+
         # Các Page Object đa website nhận URL và sheet locator từ test case.
         if page_class.__name__ in {"LoginPage", "RegisterPage"} or issubclass(
             page_class, SearchPage

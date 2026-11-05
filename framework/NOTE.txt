@@ -109,7 +109,7 @@ node -v
 npm -v
 codex --version
 ________________________________________________________________________________________________________________
-Một số câu lệnh chạy allure
+Một số câu lệnh chạy test
 
 pytest tests/framework --observe-seconds=0
 
@@ -118,9 +118,19 @@ pytest --collect-only -q
 pytest tests/failure_demo/demo_failure_evidence.py --observe-seconds=0
 
 pytest tests/web --observe-seconds=0
-pytest tests/web -k LOGIN_TS --observe-seconds=0 -v #chạy test login the souvernirs
 
-python -m pytest tests/web/test_search.py -k SEARCH_TPBA --browser chrome --headless --observe-seconds 0
+Chức năng	        Câu lệnh
+Login	        pytest tests/web/test_login.py -v
+Search	        pytest tests/web/test_search.py -v
+Validation	pytest tests/web/test_validation.py -v
+Toàn bộ test	pytest tests/web/ -v
+
+# Bộ Search của website TPBA
+python -m pytest tests/web/test_search.py -k "SEARCH_TPBA" -v
+
+# Một test case cụ thể
+python -m pytest tests/web/test_search.py -k "SEARCH_TPBA_07" -v
+
 python -m pytest tests/web/test_search.py -k "demoQA_SEARCH_08 or demoQA_SEARCH_09" --browser chrome --headless --observe-seconds 0
 
 allure serve artifacts/allure-results
