@@ -24,8 +24,8 @@ def _run_page_action(page: BasePage, action_name: str, keyword_name: str) -> Non
     action()
 
 
-def __init__(self, driver):
-    self.page = LoginPage(driver)
+def __init__(self, driver, website, url):
+    self.page = LoginPage(driver, website, url)
 
 
 def verify_login_error(self, target, data, expected):

@@ -116,4 +116,4 @@ pytest tests/web -k LOGIN_TS --observe-seconds=0 -v #chạy test login the souve
 
 allure serve artifacts/allure-results
 
-
+python -m pytest tests/web/test_register.py
