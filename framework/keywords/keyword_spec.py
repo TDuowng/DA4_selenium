@@ -28,7 +28,8 @@ KEYWORD_SPEC = {
     "VerifyText": Spec(target="element", expected="required"),
     "VerifyFieldState": Spec(target="element", expected="required"),
     "VerifyAttribute": Spec(target="element", data="required"),  # data = tên attribute
-    # Keyword chưa liệt kê (Login, AddToCart, ...) vẫn chạy, chỉ chưa được kiểm tra sớm.
+    "Login": Spec(target="page", expected="forbidden"),
+    "AddToCart": Spec(target="page", data="required", expected="forbidden"),
 }
 
 # Keyword được phép đứng đầu template.

@@ -16,6 +16,8 @@ SENSITIVE = ("password",)
 
 def _mask(row: dict[str, str]) -> str:
     """Không để mật khẩu lọt vào log/báo cáo."""
+    if row["keyword"].casefold() == "login" and row["data"]:
+        return "***"
     if any(word in row["target"].lower() for word in SENSITIVE) and row["data"]:
         return "***"
     return row["data"]

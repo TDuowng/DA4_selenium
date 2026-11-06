@@ -36,8 +36,10 @@ def test_login(context, case):
     if isinstance(context, dict):
         context["website"] = case["website"]
         context["site_url"] = case["site_url"]
+        context["login_url"] = case["login_url"]
     else:
         context.website = case["website"]
         context.site_url = case["site_url"]
+        context.login_url = case["login_url"]
 
     CaseExecutor(context).run(case["steps"])

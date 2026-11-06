@@ -199,9 +199,12 @@ def resolve_page(
 
     try:
         # Các Page Object đa website nhận URL và sheet locator từ test case.
-        if page_class.__name__ in {"LoginPage", "RegisterPage"} or issubclass(
-            page_class, SearchPage
-        ):
+        if page_class.__name__ in {
+            "LoginPage",
+            "RegisterPage",
+            "ProductPage",
+            "CartPage",
+        } or issubclass(page_class, SearchPage):
             site_url = (
                 context.get("site_url")
                 if isinstance(context, dict)
@@ -209,6 +212,14 @@ def resolve_page(
             )
             if not site_url:
                 raise TargetError("Context chưa có site_url từ sheet sites.")
+
+            if page_class.__name__ == "LoginPage":
+                login_url = (
+                    context.get("login_url")
+                    if isinstance(context, dict)
+                    else getattr(context, "login_url", None)
+                )
+                site_url = login_url or site_url
 
             timeout = (
                 context.get("timeout")
