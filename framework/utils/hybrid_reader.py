@@ -15,6 +15,7 @@ STEPS_SHEET = "test_steps"
 CASES_SHEET = "test_cases"
 SITES_SHEET = "sites"
 SITE_FIELDS = {"site_id", "url"}
+OPTIONAL_SITE_FIELDS = {"login_url"}
 REQUIRED_CASE_FIELDS = {
     "case_id",
     "template_id",
@@ -47,7 +48,10 @@ def build_cases(template_rows, data_rows, site_rows):
             raise ValueError(
                 f"{SITES_SHEET}: site_id {site_id!r} không có sheet trong locators.xlsx"
             )
-        sites[site_id] = url
+        sites[site_id] = {
+            "url": url,
+            "login_url": str(row.get("login_url") or "").strip(),
+        }
 
     templates = {}
 
@@ -97,13 +101,18 @@ def build_cases(template_rows, data_rows, site_rows):
 
         steps = bind_template(templates[template_id], row)
 
-        # Truyền website vào test case
+        site = sites[website]
+        login_url = str(row.get("login_url") or "").strip()
+        login_url = login_url or site["login_url"] or site["url"]
+
+        # Truyền website và URL đăng nhập đã xác định vào test case
         cases.append(
             {
                 "case_id": case_id,
                 "template_id": template_id,
                 "website": website,
-                "site_url": sites[website],
+                "site_url": site["url"],
+                "login_url": login_url,
                 "case_data": row,
                 "steps": steps,
             }
@@ -128,7 +137,8 @@ def read_hybrid_cases(path):
     )
     if set(sheets[STEPS_SHEET].columns) != TEMPLATE_FIELDS:
         raise ValueError(f"{STEPS_SHEET} thiếu/thừa cột")
-    if set(sheets[SITES_SHEET].columns) != SITE_FIELDS:
+    site_columns = set(sheets[SITES_SHEET].columns)
+    if not SITE_FIELDS <= site_columns or site_columns - SITE_FIELDS - OPTIONAL_SITE_FIELDS:
         raise ValueError(f"{SITES_SHEET} thiếu/thừa cột")
     return build_cases(
         records(sheets[STEPS_SHEET]),

@@ -143,3 +143,6 @@ python -m pytest tests/web/test_search.py -k "demoQA_SEARCH_08 or demoQA_SEARCH_
 allure serve artifacts/allure-results
 
 python -m pytest tests/web/test_register.py
+python -m pytest tests/web/test_login.py
+python -m pytest tests/web/test_cart.py
+python -m pytest tests/web/test_search.py
