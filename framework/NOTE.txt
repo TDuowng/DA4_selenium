@@ -139,3 +139,4 @@ python -m pytest tests/web/test_register.py
 python -m pytest tests/web/test_login.py
 python -m pytest tests/web/test_cart.py
 python -m pytest tests/web/test_search.py
+python -m pytest tests/web/test_validation.py

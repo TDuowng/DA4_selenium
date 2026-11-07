@@ -3,7 +3,10 @@
 
 from pathlib import Path
 
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import (
+    ElementClickInterceptedException,
+    NoSuchElementException,
+)
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -20,6 +23,7 @@ LOCATOR_FILE = (
 
 class BasePage:
     PAGE_NAME = ""
+    DOM_CLICK_FALLBACKS = frozenset()
 
     # Initialize the BasePage and wait for the page to load
     def __init__(self, driver, locator_sheet=None, timeout=TIMEOUT):
@@ -66,7 +70,15 @@ class BasePage:
         self.driver.get(url)
 
     def click(self, element: str):
-        self.click_element(self.locator(element))
+        locator = self.locator(element)
+        try:
+            self.click_element(locator)
+        except ElementClickInterceptedException:
+            if (self.locator_sheet, element) not in self.DOM_CLICK_FALLBACKS:
+                raise
+            self.driver.execute_script(
+                "arguments[0].click();", self.find_element(locator)
+            )
 
     def clear(self, element: str):
         self.find_element(element).clear()
