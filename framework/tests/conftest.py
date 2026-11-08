@@ -4,13 +4,10 @@ from types import SimpleNamespace
 
 import allure
 import pytest
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options as ChromeOptions
-from selenium.webdriver.edge.options import Options as EdgeOptions
-from selenium.webdriver.firefox.options import Options as FirefoxOptions
 
 import config
-from config import ARTIFACTS_DIR, PAGE_LOAD_TIMEOUT, TIMEOUT
+from config import ARTIFACTS_DIR, TIMEOUT
+from drivers.driver_manager import DriverManager
 from utils.artifact_manager import create_artifact_layout
 from utils.error_classifier import classify_exception, classify_report_text
 from utils.evidence import collect_failure_evidence
@@ -90,32 +87,14 @@ def pytest_runtest_makereport(item, call):
 def driver(request):
     name = request.config.getoption("--browser") or DEFAULT_BROWSER
     headless = request.config.getoption("--headless")
-
-    if name == "chrome":
-        options = ChromeOptions()
-        options.page_load_strategy = "eager"
-        options.add_argument("--headless=new" if headless else "--start-maximized")
-        drv = webdriver.Chrome(options=options)
-    elif name == "edge":
-        options = EdgeOptions()
-        options.add_argument("--headless=new" if headless else "--start-maximized")
-        drv = webdriver.Edge(options=options)
-    else:
-        options = FirefoxOptions()
-        if headless:
-            options.add_argument("-headless")
-        drv = webdriver.Firefox(options=options)
-
-    if headless or name == "firefox":
-        drv.set_window_size(1920, 1080)
-
-    request.node.driver = drv  # MỚI: để hook makereport lấy được driver
+    manager = DriverManager(browser=name, headless=headless)
+    drv = manager.start_driver()
+    request.node.driver = drv
     try:
-        drv.set_page_load_timeout(PAGE_LOAD_TIMEOUT)
         yield drv
     finally:
-        time.sleep(request.config.getoption("--observe-seconds"))  # MỚI
-        drv.quit()
+        time.sleep(request.config.getoption("--observe-seconds"))
+        manager.quit_driver()
 
 
 def pytest_sessionfinish(session, exitstatus):

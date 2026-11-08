@@ -6,11 +6,18 @@ from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.webdriver.edge.options import Options as EdgeOptions
 
+from config import PAGE_LOAD_TIMEOUT
+
 SUPPORTED_BROWSERS = {"chrome", "firefox", "edge"}
 
 
 class DriverManager:
-    def __init__(self, browser: str = "chrome", headless: bool = False):
+    def __init__(
+        self,
+        browser: str = "chrome",
+        headless: bool = False,
+        page_load_timeout: float = PAGE_LOAD_TIMEOUT,
+    ):
         browser = browser.lower()
         if browser not in SUPPORTED_BROWSERS:
             raise ValueError(
@@ -19,6 +26,7 @@ class DriverManager:
             )
         self.browser = browser
         self.headless = headless
+        self.page_load_timeout = page_load_timeout
         self.driver = None
 
     def start_driver(self):
@@ -29,25 +37,32 @@ class DriverManager:
             "edge": self._start_edge,
         }
         self.driver = starters[self.browser]()
-        self.driver.maximize_window()
+        try:
+            self.driver.set_page_load_timeout(self.page_load_timeout)
+            if self.headless or self.browser == "firefox":
+                self.driver.set_window_size(1920, 1080)
+            else:
+                self.driver.maximize_window()
+        except Exception:
+            self.quit_driver()
+            raise
         return self.driver
 
     def _start_chrome(self):
         options = ChromeOptions()
-        if self.headless:
-            options.add_argument("--headless=new")
+        options.page_load_strategy = "eager"
+        options.add_argument("--headless=new" if self.headless else "--start-maximized")
         return webdriver.Chrome(options=options)
 
     def _start_firefox(self):
         options = FirefoxOptions()
         if self.headless:
-            options.add_argument("--headless")
+            options.add_argument("-headless")
         return webdriver.Firefox(options=options)
 
     def _start_edge(self):
         options = EdgeOptions()
-        if self.headless:
-            options.add_argument("--headless")
+        options.add_argument("--headless=new" if self.headless else "--start-maximized")
         return webdriver.Edge(options=options)
 
     def get_driver(self):

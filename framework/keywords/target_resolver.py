@@ -80,6 +80,13 @@ def get_website(context: Any) -> str:
     return website
 
 
+def context_value(context: Any, name: str):
+    """Read an optional value from a dict or object execution context."""
+    if isinstance(context, dict):
+        return context.get(name)
+    return getattr(context, name, None)
+
+
 def page_class_name(page_name: str) -> str:
     """
     Convert Excel Page Object name to class name.
@@ -198,56 +205,22 @@ def resolve_page(
     page_class: Any = load_page_class(target_name)
 
     try:
-        # ValidationPage: sử dụng URL và sheet locator theo site_id từ Excel.
-        # Chỉ bổ sung nhánh mới; giữ nguyên cách khởi tạo Page Object cũ.
-        if page_class.__name__ == "ValidationPage":
-            site_url = (
-                context.get("site_url")
-                if isinstance(context, dict)
-                else getattr(context, "site_url", None)
-            )
-            if not site_url:
-                raise TargetError("Context chưa có site_url từ sheet sites.")
-            timeout = (
-                context.get("timeout")
-                if isinstance(context, dict)
-                else getattr(context, "timeout", None)
-            )
-            return page_class(
-                driver,
-                website=website,
-                url=site_url,
-                timeout=TIMEOUT if timeout is None else timeout,
-            )
-
         # Các Page Object đa website nhận URL và sheet locator từ test case.
         if page_class.__name__ in {
             "LoginPage",
             "RegisterPage",
             "ProductPage",
             "CartPage",
+            "ValidationPage",
         } or issubclass(page_class, SearchPage):
-            site_url = (
-                context.get("site_url")
-                if isinstance(context, dict)
-                else getattr(context, "site_url", None)
-            )
+            site_url = context_value(context, "site_url")
             if not site_url:
                 raise TargetError("Context chưa có site_url từ sheet sites.")
 
             if page_class.__name__ == "LoginPage":
-                login_url = (
-                    context.get("login_url")
-                    if isinstance(context, dict)
-                    else getattr(context, "login_url", None)
-                )
-                site_url = login_url or site_url
+                site_url = context_value(context, "login_url") or site_url
 
-            timeout = (
-                context.get("timeout")
-                if isinstance(context, dict)
-                else getattr(context, "timeout", None)
-            )
+            timeout = context_value(context, "timeout")
 
             return page_class(
                 driver,

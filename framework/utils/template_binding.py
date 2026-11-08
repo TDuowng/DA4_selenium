@@ -59,7 +59,7 @@ ELEMENT_TARGET = re.compile(r"([A-Za-z_][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)
 # CHECK REGISTRY
 # ============================================================
 
-assert set(KEYWORD_SPEC) <= set(REGISTRY.names), "KEYWORD_SPEC có keyword chưa đăng ký"
+assert set(KEYWORD_SPEC) == set(REGISTRY.names), "KEYWORD_SPEC và Registry không khớp"
 
 
 # ============================================================
@@ -236,6 +236,9 @@ def _validate_target(where, keyword, target, site_id=None):
     # --------------------------------------------------------
 
     if kind == "any":
+        return
+
+    if kind == "optional_element" and not target:
         return
 
     # --------------------------------------------------------

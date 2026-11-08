@@ -7,7 +7,7 @@ from types import SimpleNamespace
 import pytest
 
 from config import TIMEOUT, EXCEL_DIR
-from core.executor_test import TestExecutor
+from core.executor_test import TestExecutor as CaseExecutor
 from utils.hybrid_reader import read_hybrid_cases
 
 EXCEL_FILE = EXCEL_DIR / "validation_hybrid.xlsx"
@@ -29,4 +29,4 @@ def test_validation(driver, test_case):
         website=test_case["website"],
         site_url=test_case["site_url"],
     )
-    assert TestExecutor(context).run(test_case["steps"]) == "PASS"
+    assert CaseExecutor(context).run(test_case["steps"]) == "PASS"

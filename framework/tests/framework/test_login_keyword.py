@@ -68,6 +68,7 @@ def test_spcart_login_uses_admin_credentials(monkeypatch):
         page,
         "wait",
         SimpleNamespace(until=lambda condition: calls.append(("wait", condition))),
+        raising=False,
     )
 
     monkeypatch.setattr(page, "open", lambda: calls.append(("open", page.URL)))

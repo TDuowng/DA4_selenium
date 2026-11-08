@@ -11,7 +11,6 @@ from .keyword_utils import (
 from .target_resolver import TargetError, resolve_target
 
 from pages.base_page import BasePage
-from pages.login_page import LoginPage
 
 
 def _run_page_action(
@@ -24,22 +23,6 @@ def _run_page_action(
             f"chưa triển khai {action_name}()."
         )
     action(*args)
-
-
-def __init__(self, driver, website, url):
-    self.page = LoginPage(driver, website, url)
-
-
-def verify_login_error(self, target, data, expected):
-    actual = self.page.get_error()
-    assert actual == expected, f"Login error: expected={expected!r}, actual={actual!r}"
-
-
-def verify_login_success(self, target, data, expected):
-    assert "dashboard" in self.driver.current_url
-
-
-##______________________________________________________________________
 
 
 def login(

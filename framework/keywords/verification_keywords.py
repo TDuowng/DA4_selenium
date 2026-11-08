@@ -658,28 +658,6 @@ def verify_calculation(
             ("VerifyCalculation: Invalid " f"Expected value '{expected_value}'.")
         ) from exc
 
-    # If Target is provided, read actual value
-    # from the Page Object.
-    if not require_target(
-        "VerifyCalculation",
-        target,
-    ):
-        actual_number = safe_eval(str(expression))
-    else:
-        try:
-            page, element_key = resolve_element(
-                target,
-                context,
-            )
-
-            actual_text = page.get_text(element_key)
-
-            actual_number = parse_number(actual_text)
-
-        except KeywordError:
-            # Allow calculation-only usage.
-            actual_number = safe_eval(str(expression))
-
     calculated_number = safe_eval(str(expression))
 
     if abs(calculated_number - expected_number) > 0.000001:
@@ -693,9 +671,21 @@ def verify_calculation(
             calculated_number,
         )
 
+    # A blank Target checks the expression alone. When Target is supplied,
+    # resolution and the UI value must also match the calculated result.
+    actual_number = calculated_number
+    if target is not None and str(target).strip():
+        page, element_key = resolve_element(target, context)
+        try:
+            actual_number = parse_number(page.get_text(element_key))
+        except ValueError as exc:
+            raise KeywordError("VerifyCalculation: Target is not numeric.") from exc
+        if abs(actual_number - calculated_number) > 0.000001:
+            fail("VerifyCalculation", f"Calculated={calculated_number}", actual_number)
+
     return KeywordResult.ok(
         (f"Calculation '{expression}' " f"matched expected result"),
-        actual=calculated_number,
+        actual=actual_number,
     )
 
 

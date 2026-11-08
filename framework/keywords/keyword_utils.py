@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ast
+import math
 import operator
 import re
 from dataclasses import dataclass
@@ -338,7 +339,10 @@ def parse_number(
         raise ValueError(f"Boolean is not a valid number: {value!r}")
 
     if isinstance(value, (int, float)):
-        return float(value)
+        number = float(value)
+        if not math.isfinite(number):
+            raise ValueError(f"Non-finite number: {value!r}")
+        return number
 
     text = to_text(value)
 
@@ -354,7 +358,10 @@ def parse_number(
         .strip()
     )
 
-    return float(text)
+    number = float(text)
+    if not math.isfinite(number):
+        raise ValueError(f"Non-finite number: {value!r}")
+    return number
 
 
 _ALLOWED_OPERATORS = {
