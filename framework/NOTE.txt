@@ -123,7 +123,14 @@ Chức năng	        Câu lệnh
 Login	        pytest tests/web/test_login.py -v
 Search	        pytest tests/web/test_search.py -v
 Validation	pytest tests/web/test_validation.py -v
+Register	python -m pytest tests/web/test_register.py -v
 Toàn bộ test	pytest tests/web/ -v
+================
+Login	        python -m pytest tests/web/test_login.py -v --headless
+Search	        python -m pytest tests/web/test_search.py -v --headless
+Validation	python -m pytest tests/web/test_validation.py -v --headless
+Register	python -m pytest tests/web/test_register.py -v --headless
+Toàn bộ test	python -m pytest tests/web/ -v --headless
 
 # Bộ Search của website TPBA
 python -m pytest tests/web/test_search.py -k "SEARCH_TPBA" -v
